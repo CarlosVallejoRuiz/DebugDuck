@@ -31,6 +31,7 @@ function App() {
   const tamagotchi = useTamagotchi()
   const { startPomodoro, cancelPomodoro, isRunning: pomodoroRunning, secondsLeft } = usePomodoro(tamagotchi.onPomodoro)
   const incrementEurekas = useStore((s) => s.incrementEurekas)
+  const isTopPosition    = useStore((s) => s.isTopPosition)
 
   const handleVoiceResult = useCallback(
     (text: string) => {
@@ -175,16 +176,20 @@ function App() {
         onMouseDown={handleDragMouseDown}
       />
 
-      {/* Speech bubble — anchored 4 px above the duck's top edge.
-          paddingBottom on SpeechBubble is 17 px (4 px gap + 13 px tail). */}
+      {/* Speech bubble — above duck (default) or below duck (top positions). */}
       {showBubble && (
-        <div className="absolute inset-x-0 top-5 bottom-[200px] flex items-end pointer-events-auto">
+        <div className={`absolute inset-x-0 pointer-events-auto ${
+          isTopPosition
+            ? 'top-[200px] bottom-5 flex items-start'
+            : 'top-5 bottom-[200px] flex items-end'
+        }`}>
           <SpeechBubble
             phase={bubblePhase!}
             transcript={displayTranscript}
             aiResponse={displayAiResponse}
             onEureka={handleEureka}
             onPomo={handlePomo}
+            isTopPosition={isTopPosition}
           />
         </div>
       )}
@@ -200,13 +205,17 @@ function App() {
         </div>
       )}
 
-      {/* Duck — bottom 200 px */}
-      <div className="absolute inset-x-0 bottom-0 h-[200px] flex items-center justify-center pointer-events-auto">
-        {/* Wrapper gives the timer a relative anchor just above the duck */}
+      {/* Duck — bottom 200 px normally, top 200 px when in top position */}
+      <div className={`absolute inset-x-0 h-[200px] flex items-center justify-center pointer-events-auto ${
+        isTopPosition ? 'top-0' : 'bottom-0'
+      }`}>
+        {/* Wrapper gives the timer a relative anchor next to the duck */}
         <div className="relative">
           {pomodoroRunning && !showSettings && (
             <div
-              className="absolute -top-8 left-2 z-50 pointer-events-auto cursor-pointer"
+              className={`absolute left-2 z-50 pointer-events-auto cursor-pointer ${
+                isTopPosition ? 'top-full mt-1' : '-top-8'
+              }`}
               onClick={cancelPomodoro}
               title="Cancelar Pomodoro"
             >

@@ -22,6 +22,7 @@ export function DuckAvatar({ voiceState, hasResponse, onDoubleClick, onSettingsO
   const [hovered, setHovered] = useState(false)
   const tamagotchiMode = useStore((s) => s.tamagotchiMode)
   const duckHappiness  = useStore((s) => s.duckHappiness)
+  const isTopPosition  = useStore((s) => s.isTopPosition)
   const mood = getDuckMood(duckHappiness)
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -101,7 +102,7 @@ export function DuckAvatar({ voiceState, hasResponse, onDoubleClick, onSettingsO
           <div className="w-8 h-8 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-base border-2 border-gray-200 cursor-pointer">
             {mood.emoji}
           </div>
-          <div className="absolute left-0 bottom-10 bg-white/95 rounded-xl p-3 shadow-xl border border-gray-200 w-44 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+          <div className={`absolute left-0 ${isTopPosition ? 'top-10' : 'bottom-10'} bg-white/95 rounded-xl p-3 shadow-xl border border-gray-200 w-44 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none`}>
             <p className="text-xs font-bold text-gray-600 mb-1">{mood.label}</p>
             <div className="w-full h-3 bg-gray-200 rounded-full">
               <div

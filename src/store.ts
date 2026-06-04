@@ -16,6 +16,7 @@ interface AppState {
   tamagotchiMode: boolean
   duckHappiness: number
   lastInteraction: number
+  isTopPosition: boolean
 
   // ── session-only (not persisted) ───────────────────────────
   conversationHistory: HistoryEntry[]
@@ -34,6 +35,7 @@ interface AppState {
   toggleTamagotchi: () => void
   setDuckHappiness: (h: number) => void
   setLastInteraction: (t: number) => void
+  setIsTopPosition: (v: boolean) => void
 }
 
 export const useStore = create<AppState>()(
@@ -48,6 +50,7 @@ export const useStore = create<AppState>()(
       tamagotchiMode:      false,
       duckHappiness:       75,
       lastInteraction:     Date.now(),
+      isTopPosition:       false,
       conversationHistory: [],
       conversationSummary: '',
 
@@ -63,6 +66,7 @@ export const useStore = create<AppState>()(
       toggleTamagotchi:  () => set((s) => ({ tamagotchiMode:      !s.tamagotchiMode })),
       setDuckHappiness:  (h)           => set({ duckHappiness: h }),
       setLastInteraction:(t)           => set({ lastInteraction: t }),
+      setIsTopPosition:  (v)           => set({ isTopPosition: v }),
     }),
     {
       name: 'debugduck-storage',
@@ -77,6 +81,7 @@ export const useStore = create<AppState>()(
         tamagotchiMode:     s.tamagotchiMode,
         duckHappiness:      s.duckHappiness,
         lastInteraction:    s.lastInteraction,
+        isTopPosition:      s.isTopPosition,
       }),
     }
   )

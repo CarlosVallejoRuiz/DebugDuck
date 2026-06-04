@@ -8,9 +8,10 @@ interface Props {
   aiResponse: string
   onEureka: () => void
   onPomo: () => void
+  isTopPosition?: boolean
 }
 
-export function SpeechBubble({ phase, transcript, aiResponse, onEureka, onPomo }: Props) {
+export function SpeechBubble({ phase, transcript, aiResponse, onEureka, onPomo, isTopPosition = false }: Props) {
   const handleEureka = async () => {
     // Open a separate fullscreen transparent window that runs the confetti
     // animation. The duck window is never resized or moved.
@@ -19,8 +20,15 @@ export function SpeechBubble({ phase, transcript, aiResponse, onEureka, onPomo }
   }
 
   return (
-    // 14 px bottom padding so the 13 px tail clears the duck's head
-    <div className="w-full px-3 pointer-events-auto" style={{ paddingBottom: '17px', maxHeight: '240px' }}>
+    // 17 px padding on the side facing the duck so the tail clears the duck's head
+    <div
+      className="w-full px-3 pointer-events-auto"
+      style={{
+        paddingBottom: isTopPosition ? '0'   : '17px',
+        paddingTop:    isTopPosition ? '17px' : '0',
+        maxHeight: '240px',
+      }}
+    >
       <div className="relative bg-white border-[2.5px] border-black rounded-2xl shadow-lg p-3">
 
         {phase === 'listening' && (
@@ -67,30 +75,21 @@ export function SpeechBubble({ phase, transcript, aiResponse, onEureka, onPomo }
           </div>
         )}
 
-        {/* Comic tail — points down toward the duck.
-            Two triangles: black (border) under white (fill). */}
-        <div
-          className="absolute"
-          style={{
-            bottom: '-13px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            borderLeft: '12px solid transparent',
-            borderRight: '12px solid transparent',
-            borderTop: '13px solid black',
-          }}
-        />
-        <div
-          className="absolute"
-          style={{
-            bottom: '-10px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            borderLeft: '10px solid transparent',
-            borderRight: '10px solid transparent',
-            borderTop: '11px solid white',
-          }}
-        />
+        {/* Comic tail — points toward the duck (down or up depending on position).
+            Two triangles: black (border) behind white (fill). */}
+        {isTopPosition ? (
+          // Tail points UP — duck is above the bubble
+          <>
+            <div className="absolute" style={{ top: '-13px', left: '50%', transform: 'translateX(-50%)', borderLeft: '12px solid transparent', borderRight: '12px solid transparent', borderBottom: '13px solid black' }} />
+            <div className="absolute" style={{ top: '-10px', left: '50%', transform: 'translateX(-50%)', borderLeft: '10px solid transparent', borderRight: '10px solid transparent', borderBottom: '11px solid white' }} />
+          </>
+        ) : (
+          // Tail points DOWN — duck is below the bubble (default)
+          <>
+            <div className="absolute" style={{ bottom: '-13px', left: '50%', transform: 'translateX(-50%)', borderLeft: '12px solid transparent', borderRight: '12px solid transparent', borderTop: '13px solid black' }} />
+            <div className="absolute" style={{ bottom: '-10px', left: '50%', transform: 'translateX(-50%)', borderLeft: '10px solid transparent', borderRight: '10px solid transparent', borderTop: '11px solid white' }} />
+          </>
+        )}
 
       </div>
     </div>
