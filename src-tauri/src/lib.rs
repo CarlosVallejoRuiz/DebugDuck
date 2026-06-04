@@ -1,0 +1,226 @@
+/// Toggles WKWebView cursor-event passthrough.
+/// When `ignore` is true, cursor events fall through to whatever app is below.
+#[tauri::command]
+fn set_ignore_cursor(window: tauri::WebviewWindow, ignore: bool) -> Result<(), String> {
+    window.set_ignore_cursor_events(ignore).map_err(|e| e.to_string())
+}
+
+/// Opens a dedicated full-screen transparent overlay window that runs the
+/// confetti animation, then auto-closes after 2 s. The main widget window
+/// is never resized or moved.
+#[tauri::command]
+async fn launch_confetti_window(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri::Manager;
+
+    // Each invocation gets a unique label so there's no "window already exists"
+    // conflict when the user hits Eureka multiple times.
+    let label = format!(
+        "confetti-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis()
+    );
+
+    // Get primary monitor size through the main window.
+    let main_win = app
+        .get_webview_window("main")
+        .ok_or_else(|| "main window not found".to_string())?;
+    let monitor = main_win
+        .primary_monitor()
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "no primary monitor".to_string())?;
+    let phys  = monitor.size();
+    let scale = monitor.scale_factor();
+    let w     = phys.width  as f64 / scale;
+    let h     = phys.height as f64 / scale;
+
+    let confetti_win = tauri::WebviewWindowBuilder::new(
+        &app,
+        label,
+        tauri::WebviewUrl::App("confetti.html".into()),
+    )
+    .title("confetti")
+    .inner_size(w, h)
+    .position(0.0, 0.0)
+    .transparent(true)
+    .decorations(false)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    // Pass all cursor events through — overlay never blocks the system.
+    confetti_win
+        .set_ignore_cursor_events(true)
+        .map_err(|e| e.to_string())?;
+
+    // Auto-close via the cloned window handle after the animation finishes.
+    let win = confetti_win.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(2200));
+        win.close().ok();
+    });
+
+    Ok(())
+}
+
+/// Streams an LM Studio chat completion and emits each text delta to the
+/// frontend as a `stream-chunk` event, followed by a `stream-done` event
+/// carrying the full accumulated content. This sidesteps the CORS restriction
+/// that blocks native fetch in WKWebView when origin is tauri://localhost.
+#[tauri::command]
+async fn stream_lm_studio(
+    window: tauri::WebviewWindow,
+    messages: serde_json::Value,
+    model: String,
+    max_tokens: u32,
+) -> Result<(), String> {
+    use tauri::Emitter;
+
+    let client = reqwest::Client::new();
+    let body   = serde_json::json!({
+        "model":       model,
+        "messages":    messages,
+        "max_tokens":  max_tokens,
+        "temperature": 0.7,
+        "stream":      true
+    });
+
+    let mut response = client
+        .post("http://localhost:1234/v1/chat/completions")
+        .header("Content-Type", "application/json")
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let mut full_content = String::new();
+
+    while let Some(chunk) = response.chunk().await.map_err(|e| e.to_string())? {
+        let text = String::from_utf8_lossy(&chunk);
+        for line in text.lines() {
+            if !line.starts_with("data: ") { continue }
+            let data = &line[6..];
+            if data == "[DONE]" {
+                window.emit("stream-done", &full_content).map_err(|e| e.to_string())?;
+                return Ok(());
+            }
+            if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(data) {
+                if let Some(delta) = parsed["choices"][0]["delta"]["content"].as_str() {
+                    if !delta.is_empty() {
+                        full_content.push_str(delta);
+                        window.emit("stream-chunk", delta).map_err(|e| e.to_string())?;
+                    }
+                }
+            }
+        }
+    }
+
+    window.emit("stream-done", &full_content).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// Returns cursor position in logical pixels relative to the window's top-left.
+/// Uses Rust/OS APIs so it works even when cursor events are being ignored by WKWebView.
+#[tauri::command]
+fn get_cursor_pos(window: tauri::WebviewWindow) -> (f64, f64) {
+    let pos = window.cursor_position().unwrap_or_default();
+    let scale = window.scale_factor().unwrap_or(1.0);
+    let win_pos = window.outer_position().unwrap_or_default();
+    (
+        (pos.x - win_pos.x as f64) / scale,
+        (pos.y - win_pos.y as f64) / scale,
+    )
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+  tauri::Builder::default()
+    .invoke_handler(tauri::generate_handler![set_ignore_cursor, get_cursor_pos, launch_confetti_window, stream_lm_studio])
+    .plugin(tauri_plugin_http::init())
+    .plugin(tauri_plugin_notification::init())
+    .on_window_event(|window, event| {
+      if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+        api.prevent_close();
+        let _ = window;
+      }
+    })
+    .setup(|app| {
+      if cfg!(debug_assertions) {
+        app.handle().plugin(
+          tauri_plugin_log::Builder::default()
+            .level(log::LevelFilter::Info)
+            .build(),
+        )?;
+      }
+
+      // Fix double-click-to-close — must run synchronously BEFORE the event loop
+      // starts, so it's applied before any user interaction.
+      #[cfg(target_os = "macos")]
+      disable_movable_by_window_background();
+
+      // Position the widget at the bottom-right corner on startup,
+      // with a margin that clears the macOS Dock (≈80 px).
+      {
+        use tauri::Manager;
+        let win = app.get_webview_window("main").unwrap();
+        if let Ok(Some(monitor)) = win.current_monitor() {
+          if let Ok(win_size) = win.outer_size() {
+            let mon = monitor.size();
+            let x = mon.width  as i32 - win_size.width  as i32 - 16;
+            let y = mon.height as i32 - win_size.height as i32 - 80;
+            let _ = win.set_position(tauri::PhysicalPosition::new(x, y));
+          }
+        }
+      }
+
+      Ok(())
+    })
+    .run(tauri::generate_context!())
+    .expect("error while running tauri application");
+}
+
+/// Root cause of double-click-to-close on macOS:
+/// With decorations:false, tao calls `setMovableByWindowBackground:YES` on every
+/// NSWindow it creates, making the entire transparent surface act as a title bar.
+/// Any double-click fires macOS's "title bar action" (zoom/close) at NSWindow level,
+/// BEFORE WKWebView dispatches the event to JavaScript — so preventDefault/stopPropagation
+/// in React and Tauri's on_window_event handler are both bypassed.
+///
+/// Fix: iterate NSApplication.windows synchronously in setup and reset the flag.
+/// We go through NSApplication (not with_webview) because with_webview dispatches
+/// async to the event loop, at which point the WKWebView may not yet be attached to
+/// the NSWindow — causing [wkview window] to return nil and the fix to silently no-op.
+#[cfg(target_os = "macos")]
+fn disable_movable_by_window_background() {
+    use objc2::runtime::{AnyClass, AnyObject};
+
+    unsafe {
+        let Some(app_class) = AnyClass::get("NSApplication") else {
+            return;
+        };
+        // Class objects are AnyObject in the ObjC runtime — the cast is valid.
+        let app_cls = (app_class as *const AnyClass)
+            .cast::<AnyObject>()
+            .cast_mut();
+
+        let nsapp: *mut AnyObject = objc2::msg_send![app_cls, sharedApplication];
+        if nsapp.is_null() {
+            return;
+        }
+
+        let windows: *mut AnyObject = objc2::msg_send![nsapp, windows];
+        if windows.is_null() {
+            return;
+        }
+
+        let count: usize = objc2::msg_send![windows, count];
+        for i in 0..count {
+            let win: *mut AnyObject = objc2::msg_send![windows, objectAtIndex: i];
+            if !win.is_null() {
+                let _: () = objc2::msg_send![win, setMovableByWindowBackground: false];
+            }
+        }
+    }
+}

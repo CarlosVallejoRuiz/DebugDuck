@@ -1,0 +1,17 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "http-localhost",
+  "description": "Allow HTTP requests to LM Studio on localhost",
+  "windows": ["main"],
+  "permissions": [
+    {
+      "identifier": "http:allow-fetch",
+      "allow": [
+        { "url": "http://localhost:1234/**" },
+        { "url": "http://127.0.0.1:1234/**" }
+      ]
+    },
+    "http:allow-fetch-send",
+    "http:allow-fetch-read-body"
+  ]
+}

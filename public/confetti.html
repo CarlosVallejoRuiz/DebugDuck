@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: transparent; overflow: hidden; }
+  </style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<script>
+  confetti({
+    particleCount: 250,
+    spread: 130,
+    origin: { x: 0.5, y: 0.8 },
+    colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'],
+    ticks: 150,
+    gravity: 1.0,
+    scalar: 1.3,
+  });
+
+  // JS-side fallback: close the window after animation even if Rust close fails.
+  setTimeout(() => window.close(), 2000);
+</script>
+</body>
+</html>
