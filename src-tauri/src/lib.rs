@@ -121,6 +121,111 @@ async fn stream_lm_studio(
     Ok(())
 }
 
+/// Opens the DebugDuck Arcade window (400×520).  If already open, focuses it.
+#[tauri::command]
+async fn launch_games_window(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri::Manager;
+
+    if let Some(existing) = app.get_webview_window("games") {
+        existing.set_focus().map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+
+    tauri::WebviewWindowBuilder::new(
+        &app,
+        "games",
+        tauri::WebviewUrl::App("games.html".into()),
+    )
+    .title("DebugDuck Arcade")
+    .inner_size(400.0, 520.0)
+    .resizable(false)
+    .always_on_top(true)
+    .center()
+    .decorations(true)
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+/// Called by games.html when a game session ends.
+/// Emits a `game-result` event to the main window, then closes the games window.
+#[tauri::command]
+async fn finish_game(
+    app: tauri::AppHandle,
+    completed: bool,
+    won: bool,
+    game: String,
+) -> Result<(), String> {
+    use tauri::{Emitter, Manager};
+
+    if let Some(main_win) = app.get_webview_window("main") {
+        main_win
+            .emit(
+                "game-result",
+                serde_json::json!({ "completed": completed, "won": won, "game": game }),
+            )
+            .map_err(|e| e.to_string())?;
+    }
+
+    if let Some(games_win) = app.get_webview_window("games") {
+        games_win.close().map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
+/// Sends a 128×128 pixel-art PNG to the local LM Studio model for sarcastic scoring.
+/// Requires a vision-capable model loaded in LM Studio (e.g. llava, qwen-vl).
+/// Returns a JSON string: {"score": 0-100, "comment": "..."}
+#[tauri::command]
+async fn score_pixel_art(base64_image: String, topic: String) -> Result<String, String> {
+    let client = reqwest::Client::new();
+
+    let body = serde_json::json!({
+        "model": "local-model",
+        "max_tokens": 150,
+        "messages": [{
+            "role": "user",
+            "content": [
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": format!("data:image/png;base64,{}", base64_image)
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": format!(
+                        "Eres un crítico de arte pixel sarcástico. \
+                        El usuario intentó dibujar \"{}\" en un grid de 16x16 píxeles. \
+                        Responde SOLO con este formato JSON sin markdown: \
+                        {{\"score\": 0-100, \"comment\": \"comentario sarcástico en español máximo 15 palabras\"}} \
+                        Sé honesto y gracioso.",
+                        topic
+                    )
+                }
+            ]
+        }]
+    });
+
+    let response = client
+        .post("http://localhost:1234/v1/chat/completions")
+        .header("Content-Type", "application/json")
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let data: serde_json::Value = response.json().await.map_err(|e| e.to_string())?;
+
+    let content = data["choices"][0]["message"]["content"]
+        .as_str()
+        .unwrap_or("{\"score\": 42, \"comment\": \"No tengo palabras. Y eso es mucho decir.\"}");
+
+    Ok(content.to_string())
+}
+
 /// Returns cursor position in logical pixels relative to the window's top-left.
 /// Uses Rust/OS APIs so it works even when cursor events are being ignored by WKWebView.
 #[tauri::command]
@@ -137,13 +242,16 @@ fn get_cursor_pos(window: tauri::WebviewWindow) -> (f64, f64) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
-    .invoke_handler(tauri::generate_handler![set_ignore_cursor, get_cursor_pos, launch_confetti_window, stream_lm_studio])
+    .invoke_handler(tauri::generate_handler![set_ignore_cursor, get_cursor_pos, launch_confetti_window, stream_lm_studio, launch_games_window, finish_game, score_pixel_art])
     .plugin(tauri_plugin_http::init())
     .plugin(tauri_plugin_notification::init())
     .on_window_event(|window, event| {
+      // Only prevent close on the main widget — all other windows (games, confetti, …)
+      // are allowed to close normally.
       if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-        api.prevent_close();
-        let _ = window;
+        if window.label() == "main" {
+          api.prevent_close();
+        }
       }
     })
     .setup(|app| {

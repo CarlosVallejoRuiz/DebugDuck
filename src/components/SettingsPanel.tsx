@@ -5,6 +5,16 @@ interface Props {
   onClose: () => void
   detectedModel: string
   refreshModel: () => Promise<void>
+  gamesTimeLeft: number
+  gamesWindowOpen: boolean
+}
+
+const GAME_INTERVALS = [15, 25, 45, 60]
+
+const formatTime = (seconds: number) => {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
 const AI_MODELS = [
@@ -28,7 +38,7 @@ const GRID: { pos: Position; label: string }[] = [
   { pos: 'bottom-right', label: '↘' },
 ]
 
-export function SettingsPanel({ onClose, detectedModel, refreshModel }: Props) {
+export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeLeft, gamesWindowOpen }: Props) {
   const { moveToPosition } = useWindowPosition()
   const aiModel             = useStore((s) => s.aiModel)
   const setAiModel          = useStore((s) => s.setAiModel)
@@ -41,6 +51,10 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel }: Props) {
   const clearConversationData  = useStore((s) => s.clearConversationData)
   const tamagotchiMode         = useStore((s) => s.tamagotchiMode)
   const toggleTamagotchi       = useStore((s) => s.toggleTamagotchi)
+  const gamesEnabled           = useStore((s) => s.gamesEnabled)
+  const toggleGamesEnabled     = useStore((s) => s.toggleGamesEnabled)
+  const gamesInterval          = useStore((s) => s.gamesInterval)
+  const setGamesInterval       = useStore((s) => s.setGamesInterval)
 
   const handlePosition = async (pos: Position) => {
     await moveToPosition(pos)
@@ -134,6 +148,67 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel }: Props) {
             tamagotchiMode ? 'translate-x-5' : 'translate-x-0.5'
           }`} />
         </button>
+      </div>
+
+      {/* Games toggle + timer + frequency */}
+      <div className="w-full flex flex-col gap-1.5">
+        <div className="flex items-center justify-between">
+          <p className="text-white/70 text-[10px] font-medium">🎮 Minijuegos</p>
+          <button
+            onClick={toggleGamesEnabled}
+            className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${
+              gamesEnabled ? 'bg-purple-500' : 'bg-white/20'
+            }`}
+            aria-label="Toggle Minijuegos"
+          >
+            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+              gamesEnabled ? 'translate-x-5' : 'translate-x-0.5'
+            }`} />
+          </button>
+        </div>
+
+        {/* Timer display */}
+        <p className={`text-[10px] font-mono tabular-nums ${
+          !gamesEnabled
+            ? 'text-white/25'
+            : gamesWindowOpen
+            ? 'text-purple-400'
+            : gamesTimeLeft <= gamesInterval * 6    // ≤10%
+            ? 'text-red-400'
+            : gamesTimeLeft <= gamesInterval * 15   // ≤25%
+            ? 'text-yellow-400'
+            : 'text-green-400'
+        }`}>
+          {!gamesEnabled
+            ? 'Desactivado'
+            : gamesWindowOpen
+            ? '¡Jugando ahora!'
+            : gamesTimeLeft <= 0
+            ? '¡Es hora de jugar!'
+            : `Próximo en: ${formatTime(gamesTimeLeft)}`}
+        </p>
+
+        {/* Frequency selector */}
+        {gamesEnabled && (
+          <div className="flex flex-col gap-1">
+            <p className="text-white/40 text-[9px]">Frecuencia</p>
+            <div className="flex gap-1.5">
+              {GAME_INTERVALS.map(min => (
+                <button
+                  key={min}
+                  onClick={() => setGamesInterval(min)}
+                  className={`flex-1 py-0.5 rounded-full text-[9px] font-medium border transition-colors ${
+                    gamesInterval === min
+                      ? 'bg-yellow-400 text-black border-yellow-400'
+                      : 'bg-white/10 text-white/50 border-white/20 hover:bg-white/20'
+                  }`}
+                >
+                  {min}m
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Cruelty slider — hidden when Tamagotchi mode controls tone */}

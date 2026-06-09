@@ -17,6 +17,9 @@ interface AppState {
   duckHappiness: number
   lastInteraction: number
   isTopPosition: boolean
+  lastPosition: string
+  gamesEnabled: boolean
+  gamesInterval: number
 
   // ── session-only (not persisted) ───────────────────────────
   conversationHistory: HistoryEntry[]
@@ -36,6 +39,9 @@ interface AppState {
   setDuckHappiness: (h: number) => void
   setLastInteraction: (t: number) => void
   setIsTopPosition: (v: boolean) => void
+  setLastPosition: (pos: string) => void
+  toggleGamesEnabled: () => void
+  setGamesInterval: (minutes: number) => void
 }
 
 export const useStore = create<AppState>()(
@@ -51,6 +57,9 @@ export const useStore = create<AppState>()(
       duckHappiness:       75,
       lastInteraction:     Date.now(),
       isTopPosition:       false,
+      lastPosition:        'bottom-right',
+      gamesEnabled:        true,
+      gamesInterval:       25,
       conversationHistory: [],
       conversationSummary: '',
 
@@ -67,6 +76,9 @@ export const useStore = create<AppState>()(
       setDuckHappiness:  (h)           => set({ duckHappiness: h }),
       setLastInteraction:(t)           => set({ lastInteraction: t }),
       setIsTopPosition:  (v)           => set({ isTopPosition: v }),
+      setLastPosition:   (pos)         => set({ lastPosition: pos }),
+      toggleGamesEnabled: () => set((s) => ({ gamesEnabled: !s.gamesEnabled })),
+      setGamesInterval:   (minutes) => set({ gamesInterval: minutes }),
     }),
     {
       name: 'debugduck-storage',
@@ -82,6 +94,9 @@ export const useStore = create<AppState>()(
         duckHappiness:      s.duckHappiness,
         lastInteraction:    s.lastInteraction,
         isTopPosition:      s.isTopPosition,
+        lastPosition:       s.lastPosition,
+        gamesEnabled:       s.gamesEnabled,
+        gamesInterval:      s.gamesInterval,
       }),
     }
   )

@@ -21,19 +21,29 @@ const libretatModules = import.meta.glob(
   { eager: true, query: '?url', import: 'default' }
 ) as Record<string, string>
 
+const gametimeModules = import.meta.glob(
+  '../assets/animations/gametime/*.png',
+  { eager: true, query: '?url', import: 'default' }
+) as Record<string, string>
+
 const toFrames = (m: Record<string, string>) =>
   Object.keys(m).sort().map(k => m[k])
 
-const IDLE    = { frames: toFrames(idleModules),     duration: 3600 }
-const RASCA   = { frames: toFrames(rascaModules),    duration: 2500 }
-const ASIENTE = { frames: toFrames(asienteModules),  duration: 2000 }
-const LIBRETA = { frames: toFrames(libretatModules), duration: 4000 }
+const IDLE     = { frames: toFrames(idleModules),      duration: 3600 }
+const RASCA    = { frames: toFrames(rascaModules),     duration: 2500 }
+const ASIENTE  = { frames: toFrames(asienteModules),   duration: 2000 }
+const LIBRETA  = { frames: toFrames(libretatModules),  duration: 4000 }
+const GAMETIME = { frames: toFrames(gametimeModules),  duration: 3000 }
 
 const LISTENING_ANIMS = [RASCA, ASIENTE, LIBRETA]
 
-export type AnimState = 'idle' | 'listening' | 'thinking' | 'responding'
+export type AnimState = 'idle' | 'listening' | 'thinking' | 'responding' | 'gaming'
 
-export function useAnimation(state: AnimState): string {
+export function useAnimation(
+  state: AnimState,
+  isGamingRef?: { current: boolean },
+  onGamingComplete?: () => void
+): string {
   const [src, setSrc] = useState(IDLE.frames[0] ?? '')
 
   const tamagotchiMode = useStore((s) => s.tamagotchiMode)
@@ -100,7 +110,49 @@ export function useAnimation(state: AnimState): string {
       while (active) await playAnim(RASCA)
     }
 
-    if      (state === 'idle')      runIdle()
+    // Gaming — three phases:
+    //   1. Intro: all-but-last-15 frames, once. Skips to outro if gaming ends early.
+    //   2. Loop: last 15 frames until isGamingRef goes false.
+    //   3. Outro: first 15 frames reversed, once. Then signals onGamingComplete.
+    // `active` stays true for all three because inGamingMode keeps state='gaming'
+    // until onGamingComplete fires. `isGamingRef` controls the Phase 2 exit.
+    const runGaming = async () => {
+      const allFrames   = GAMETIME.frames
+      const msPerFrame  = Math.floor(GAMETIME.duration / allFrames.length)
+      const introFrames = allFrames.slice(0, allFrames.length - 15)
+      const loopFrames  = allFrames.slice(-15)
+      const outroFrames = allFrames.slice(0, 15).reverse()
+
+      // Phase 1 — intro (break early if gaming ends mid-intro)
+      for (const frame of introFrames) {
+        if (!active) return
+        if (isGamingRef && !isGamingRef.current) break
+        setSrc(frame)
+        await wait(msPerFrame)
+      }
+
+      // Phase 2 — loop until isGamingRef goes false
+      loop: while (active) {
+        for (const frame of loopFrames) {
+          if (!active) return
+          if (!isGamingRef?.current) break loop
+          setSrc(frame)
+          await wait(msPerFrame)
+        }
+      }
+
+      // Phase 3 — outro (reversed intro frames)
+      for (const frame of outroFrames) {
+        if (!active) return
+        setSrc(frame)
+        await wait(msPerFrame)
+      }
+
+      onGamingComplete?.()
+    }
+
+    if      (state === 'gaming')    runGaming()
+    else if (state === 'idle')      runIdle()
     else if (state === 'listening') runListening()
     else if (state === 'thinking')  runThinking()
     else                            runIdle() // responding → idle loop

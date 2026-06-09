@@ -3,7 +3,8 @@
   "identifier": "default",
   "description": "enables the default permissions",
   "windows": [
-    "main"
+    "main",
+    "games"
   ],
   "permissions": [
     "core:default",
@@ -15,6 +16,7 @@
     "core:window:allow-start-dragging",
     "notification:default",
     "core:event:allow-listen",
-    "core:event:allow-unlisten"
+    "core:event:allow-unlisten",
+    "core:event:allow-emit"
   ]
 }

@@ -14,6 +14,7 @@ const DOCK_MARGIN = 80   // extra bottom gap for macOS Dock / Windows taskbar
 
 export function useWindowPosition() {
   const setIsTopPosition = useStore((s) => s.setIsTopPosition)
+  const setLastPosition  = useStore((s) => s.setLastPosition)
 
   const moveToPosition = useCallback(async (pos: Position) => {
     const monitor = await currentMonitor()
@@ -40,7 +41,8 @@ export function useWindowPosition() {
 
     await getCurrentWindow().setPosition(new LogicalPosition(x, y))
     setIsTopPosition(pos.startsWith('top'))
-  }, [setIsTopPosition])
+    setLastPosition(pos)
+  }, [setIsTopPosition, setLastPosition])
 
   return { moveToPosition }
 }

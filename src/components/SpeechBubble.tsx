@@ -9,9 +9,12 @@ interface Props {
   onEureka: () => void
   onPomo: () => void
   isTopPosition?: boolean
+  isLeftPosition?: boolean
 }
 
-export function SpeechBubble({ phase, transcript, aiResponse, onEureka, onPomo, isTopPosition = false }: Props) {
+export function SpeechBubble({ phase, transcript, aiResponse, onEureka, onPomo, isTopPosition = false, isLeftPosition = false }: Props) {
+  // Tail anchors toward the duck's face side. scaleX(-1) puts the beak on the left.
+  const tailLeft = isLeftPosition ? '30%' : '50%'
   const handleEureka = async () => {
     // Open a separate fullscreen transparent window that runs the confetti
     // animation. The duck window is never resized or moved.
@@ -80,14 +83,14 @@ export function SpeechBubble({ phase, transcript, aiResponse, onEureka, onPomo, 
         {isTopPosition ? (
           // Tail points UP — duck is above the bubble
           <>
-            <div className="absolute" style={{ top: '-13px', left: '50%', transform: 'translateX(-50%)', borderLeft: '12px solid transparent', borderRight: '12px solid transparent', borderBottom: '13px solid black' }} />
-            <div className="absolute" style={{ top: '-10px', left: '50%', transform: 'translateX(-50%)', borderLeft: '10px solid transparent', borderRight: '10px solid transparent', borderBottom: '11px solid white' }} />
+            <div className="absolute" style={{ top: '-13px', left: tailLeft, transform: 'translateX(-50%)', borderLeft: '12px solid transparent', borderRight: '12px solid transparent', borderBottom: '13px solid black' }} />
+            <div className="absolute" style={{ top: '-10px', left: tailLeft, transform: 'translateX(-50%)', borderLeft: '10px solid transparent', borderRight: '10px solid transparent', borderBottom: '11px solid white' }} />
           </>
         ) : (
           // Tail points DOWN — duck is below the bubble (default)
           <>
-            <div className="absolute" style={{ bottom: '-13px', left: '50%', transform: 'translateX(-50%)', borderLeft: '12px solid transparent', borderRight: '12px solid transparent', borderTop: '13px solid black' }} />
-            <div className="absolute" style={{ bottom: '-10px', left: '50%', transform: 'translateX(-50%)', borderLeft: '10px solid transparent', borderRight: '10px solid transparent', borderTop: '11px solid white' }} />
+            <div className="absolute" style={{ bottom: '-13px', left: tailLeft, transform: 'translateX(-50%)', borderLeft: '12px solid transparent', borderRight: '12px solid transparent', borderTop: '13px solid black' }} />
+            <div className="absolute" style={{ bottom: '-10px', left: tailLeft, transform: 'translateX(-50%)', borderLeft: '10px solid transparent', borderRight: '10px solid transparent', borderTop: '11px solid white' }} />
           </>
         )}
 

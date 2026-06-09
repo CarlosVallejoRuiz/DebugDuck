@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAnimation, type AnimState } from '../hooks/useAnimation'
 import { getDuckMood } from '../hooks/useTamagotchi'
 import { useStore } from '../store'
 import type { VoiceState } from '../hooks/useVoiceRecognition'
 
-const toAnimState = (vs: VoiceState, hasResponse: boolean): AnimState => {
+const toAnimState = (vs: VoiceState, hasResponse: boolean, isGaming: boolean): AnimState => {
+  if (isGaming)             return 'gaming'     // games window open → gametime loop
   if (hasResponse)          return 'responding' // AI response visible → idle loop
   if (vs === 'listening')   return 'listening'
   if (vs === 'processing')  return 'thinking'   // waiting for AI → rasca
@@ -16,17 +17,39 @@ interface Props {
   hasResponse: boolean
   onDoubleClick: () => void
   onSettingsOpen: () => void
+  onGamesOpen: () => void
+  isGaming: boolean
 }
 
-export function DuckAvatar({ voiceState, hasResponse, onDoubleClick, onSettingsOpen }: Props) {
+export function DuckAvatar({ voiceState, hasResponse, onDoubleClick, onSettingsOpen, onGamesOpen, isGaming }: Props) {
   const [hovered, setHovered] = useState(false)
   const tamagotchiMode = useStore((s) => s.tamagotchiMode)
   const duckHappiness  = useStore((s) => s.duckHappiness)
   const isTopPosition  = useStore((s) => s.isTopPosition)
+  const lastPosition   = useStore((s) => s.lastPosition)
+  const isLeft         = lastPosition.includes('left')
   const mood = getDuckMood(duckHappiness)
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const frameSrc = useAnimation(toAnimState(voiceState, hasResponse))
+
+  // isGamingRef lets the animation loop read the live prop without stale closures.
+  // inGamingMode keeps state='gaming' alive through Phase 3 so active stays true.
+  const isGamingRef = useRef(false)
+  const [inGamingMode, setInGamingMode] = useState(false)
+
+  useEffect(() => {
+    isGamingRef.current = isGaming
+    if (isGaming) setInGamingMode(true)
+    // Phase 3 completion sets inGamingMode=false via handleGamingComplete
+  }, [isGaming])
+
+  const handleGamingComplete = useCallback(() => setInGamingMode(false), [])
+
+  const frameSrc = useAnimation(
+    toAnimState(voiceState, hasResponse, inGamingMode),
+    isGamingRef,
+    handleGamingComplete
+  )
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -80,7 +103,12 @@ export function DuckAvatar({ voiceState, hasResponse, onDoubleClick, onSettingsO
           height={190}
           data-duck="true"
           className="pointer-events-none"
-          style={{ width: '190px', height: '190px' }}
+          style={{
+            width: '190px',
+            height: '190px',
+            transform: isLeft ? 'scaleX(-1)' : 'none',
+            transition: 'transform 0.2s ease',
+          }}
         />
       </div>
 
@@ -96,6 +124,17 @@ export function DuckAvatar({ voiceState, hasResponse, onDoubleClick, onSettingsO
           ⚙
         </button>
       )}
+
+      {/* Games button — always visible, bottom-right corner */}
+      <button
+        data-games-btn="true"
+        className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-all text-xs pointer-events-auto z-10"
+        onClick={(e) => { e.stopPropagation(); onGamesOpen() }}
+        aria-label="Minijuegos"
+        title="Abrir Arcade"
+      >
+        🎮
+      </button>
 
       {tamagotchiMode && (
         <div className="absolute top-1 -left-10 z-50 group pointer-events-auto">

@@ -192,3 +192,81 @@ codesign --sign - --force --deep \
   src-tauri/target/debug/bundle/macos/DebugDuck.app && \
 open src-tauri/target/debug/bundle/macos/DebugDuck.app
 ```
+
+## 14. Sistema de Minijuegos (PENDIENTE DE IMPLEMENTAR)
+
+### Activación
+- Automática: tras completar un Pomodoro o 25min de inactividad
+- Manual: botón 🎮 permanente en el widget junto al engranaje
+- Toggle en SettingsPanel: "🎮 Minijuegos ON/OFF"
+  * OFF: desactiva sugerencia automática, botón manual sigue activo
+
+### Ventana de juegos
+- Comando Rust: `launch_games_window()` en lib.rs
+- Archivo: `public/games.html` (JS puro, sin frameworks)
+- Tamaño: 400x500px, always_on_top, centrada
+- Selecciona UN juego aleatorio al abrir
+- Botón "🔀 Otro juego" para cambiar aleatoriamente
+
+### Estética RETRO TERMINAL obligatoria
+- Fondo: negro puro (#000000)
+- Texto y elementos: verde fosforescente (#00ff00)
+- Fuente: Courier New o monospace puro
+- Efecto scanlines sobre todo el contenido
+- Efecto CRT: viñeta en bordes
+- Bordes ASCII: ┌─┐│└─┘ en lugar de border-radius
+- Botones: [JUGAR] → [>JUGAR<] en hover
+- Animaciones a "pasos" sin transitions suaves
+- Títulos con efecto typing (letras aparecen una a una)
+- Puntuaciones con prefijo: SCORE: 0042
+- Game over parpadeante estilo arcade
+- Sonidos via Web Audio API (sin archivos externos):
+  beep en click, error al fallar, melodía al ganar
+
+### Los 6 juegos
+1. 🎯 PATO AL AGUA (Flappy Duck)
+   - Canvas 380x300px, gravedad + obstáculos
+   - Velocidad progresiva, puntuación por obstáculos
+
+2. 🧠 DEBUG QUIZ
+   - 10 preguntas de banco de 20+, 4 opciones
+   - 15 segundos por pregunta, barra de tiempo
+   - Temas: JS, Python, Git, patrones, algoritmos
+   - Mensajes sarcásticos del pato según resultado
+
+3. 🎨 PATO PIXEL
+   - Grid 16x16, paleta 8 colores
+   - Sin puntuación ni tiempo — relajante
+   - Botones: Limpiar + Guardar como PNG
+
+4. ⚡ RUBBER DUCK TYPING
+   - 30 palabras técnicas por ronda
+   - Banco 100+ términos (React, TypeScript, etc.)
+   - Mide WPM y precisión %
+
+5. 🔢 DUCK MATH
+   - 10 operaciones, 8 segundos cada una
+   - Niveles: fácil/medio/difícil
+   - Puntuación por aciertos y velocidad
+
+6. ❌⭕ 3 EN RAYA
+   - IA con algoritmo minimax perfecto
+   - El pato nunca pierde
+   - Mensajes sarcásticos según resultado:
+     * Gana pato: "¿En serio? Soy un pato de goma..."
+     * Empate: "No está mal para ser humano."
+
+### Integración Tamagotchi
+- Completar juego: +5 happiness
+- Ganar (Quiz, Math, Typing >60 WPM): +8 happiness  
+- Perder al pato en 3 en raya: +3 happiness
+- Emitir evento Tauri al cerrar con resultado
+  para que App.tsx actualice duckHappiness
+
+### Archivos a crear/modificar
+- `public/games.html` — ventana de juegos completa
+- `src-tauri/src/lib.rs` — comando launch_games_window
+- `src-tauri/capabilities/default.json` — permisos
+- `src/components/SettingsPanel.tsx` — toggle minijuegos
+- `src/App.tsx` — botón 🎮 + lógica de sugerencia automática
+- `src/store.ts` — gamesEnabled: boolean (default: true)

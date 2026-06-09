@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import duckImg from './assets/DebugDuck.png'
 import { DuckAvatar } from './components/DuckAvatar'
@@ -9,6 +10,7 @@ import { useVoiceRecognition } from './hooks/useVoiceRecognition'
 import { useAIResponse } from './hooks/useAIResponse'
 import { usePomodoro } from './hooks/usePomodoro'
 import { useTamagotchi } from './hooks/useTamagotchi'
+import { useWindowPosition, type Position } from './hooks/useWindowPosition'
 import { useStore } from './store'
 
 const DEBUG_BUBBLE = false
@@ -27,11 +29,65 @@ const handleDragMouseDown = async (e: React.MouseEvent) => {
 function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [dismissed, setDismissed] = useState(false)
+  const [showGameSuggestion, setShowGameSuggestion] = useState(false)
   const { aiResponse, isThinking, fetchResponse, clearResponse, detectedModel, refreshModel } = useAIResponse()
   const tamagotchi = useTamagotchi()
-  const { startPomodoro, cancelPomodoro, isRunning: pomodoroRunning, secondsLeft } = usePomodoro(tamagotchi.onPomodoro)
-  const incrementEurekas = useStore((s) => s.incrementEurekas)
   const isTopPosition    = useStore((s) => s.isTopPosition)
+  const lastPosition     = useStore((s) => s.lastPosition)
+  const setDuckHappiness = useStore((s) => s.setDuckHappiness)
+
+  const { moveToPosition } = useWindowPosition()
+
+  // Restore saved window position on startup using the same logic as the manual grid.
+  useEffect(() => {
+    moveToPosition(lastPosition as Position)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const incrementEurekas = useStore((s) => s.incrementEurekas)
+  const gamesEnabled     = useStore((s) => s.gamesEnabled)
+  const gamesInterval    = useStore((s) => s.gamesInterval)
+
+  const [gamesTimeLeft,   setGamesTimeLeft]   = useState(gamesInterval * 60)
+  const [gamesWindowOpen, setGamesWindowOpen] = useState(false)
+  const gamesTimerRef    = useRef<ReturnType<typeof setInterval> | null>(null)
+  const gamesTimeLeftRef = useRef<number>(gamesInterval * 60)
+
+  const startGamesTimer = useCallback(() => {
+    if (gamesTimerRef.current) clearInterval(gamesTimerRef.current)
+    const secs = useStore.getState().gamesInterval * 60
+    gamesTimeLeftRef.current = secs
+    setGamesTimeLeft(secs)
+    gamesTimerRef.current = setInterval(() => {
+      gamesTimeLeftRef.current -= 1
+      setGamesTimeLeft(gamesTimeLeftRef.current)
+      if (gamesTimeLeftRef.current <= 0) {
+        clearInterval(gamesTimerRef.current!)
+        gamesTimerRef.current = null
+        setShowGameSuggestion(true)
+      }
+    }, 1000)
+  }, [])
+
+  const stopGamesTimer = useCallback((reset: boolean) => {
+    if (gamesTimerRef.current) {
+      clearInterval(gamesTimerRef.current)
+      gamesTimerRef.current = null
+    }
+    if (reset) {
+      const secs = useStore.getState().gamesInterval * 60
+      gamesTimeLeftRef.current = secs
+      setGamesTimeLeft(secs)
+    }
+  }, [])
+
+  // Callback passed to usePomodoro — also shows game suggestion when gamesEnabled.
+  const handlePomodoroComplete = useCallback(() => {
+    tamagotchi.onPomodoro()
+    if (useStore.getState().gamesEnabled) {
+      setShowGameSuggestion(true)
+    }
+  }, [tamagotchi])
+
+  const { startPomodoro, cancelPomodoro, isRunning: pomodoroRunning, secondsLeft } = usePomodoro(handlePomodoroComplete)
 
   const handleVoiceResult = useCallback(
     (text: string) => {
@@ -71,6 +127,51 @@ function App() {
     clearResponse()
   }, [startPomodoro, reset, clearResponse])
 
+  const handleGamesOpen = useCallback(async () => {
+    try {
+      await invoke('launch_games_window')
+      setGamesWindowOpen(true)
+      stopGamesTimer(false)
+    } catch (e) {
+      console.error(e)
+    }
+  }, [stopGamesTimer])
+
+  const handleGameSuggestionAccept = useCallback(async () => {
+    setShowGameSuggestion(false)
+    await handleGamesOpen()
+  }, [handleGamesOpen])
+
+  // Start/stop/reset the games countdown based on enabled state and interval.
+  useEffect(() => {
+    if (gamesEnabled) {
+      startGamesTimer()
+    } else {
+      setShowGameSuggestion(false)
+      stopGamesTimer(true)
+    }
+    return () => { stopGamesTimer(false) }
+  }, [gamesEnabled, gamesInterval, startGamesTimer, stopGamesTimer])
+
+  // Listen for game-result events: update happiness, reset timer, close tracking.
+  useEffect(() => {
+    let unlisten: (() => void) | undefined
+
+    listen<{ completed: boolean; won: boolean; game: string }>('game-result', (event) => {
+      const { completed, won, game } = event.payload
+      setGamesWindowOpen(false)
+      startGamesTimer()
+      if (!completed) return
+      let bonus = 5
+      if (game === 'tictactoe') bonus = 3
+      else if (won && ['quiz', 'math', 'typing'].includes(game)) bonus = 8
+      const current = useStore.getState().duckHappiness
+      setDuckHappiness(Math.min(100, current + bonus))
+    }).then(fn => { unlisten = fn })
+
+    return () => { unlisten?.() }
+  }, [setDuckHappiness, startGamesTimer])
+
   // Offscreen canvas for per-pixel alpha sampling of the duck PNG.
   const duckCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const duckCtxRef   = useRef<CanvasRenderingContext2D | null>(null)
@@ -99,14 +200,20 @@ function App() {
     let ignoring = false
 
     const isDuckTransparent = (winX: number, winY: number): boolean => {
-      // While bubble or settings are open, never ignore — buttons must be clickable.
+      // While bubble, settings, or game suggestion are open, never ignore.
       if (uiVisibleRef.current) return false
 
-      // The settings gear button sits in the transparent corner of the duck PNG —
-      // always keep it interactive regardless of the alpha check below.
+      // Keep gear button interactive even when duck is transparent.
       const gearBtn = document.querySelector('[data-settings-btn]')
       if (gearBtn) {
         const r = gearBtn.getBoundingClientRect()
+        if (winX >= r.left && winX <= r.right && winY >= r.top && winY <= r.bottom) return false
+      }
+
+      // Keep games button interactive.
+      const gamesBtn = document.querySelector('[data-games-btn]')
+      if (gamesBtn) {
+        const r = gamesBtn.getBoundingClientRect()
         if (winX >= r.left && winX <= r.right && winY >= r.top && winY <= r.bottom) return false
       }
 
@@ -162,15 +269,13 @@ function App() {
 
   // Keep uiVisibleRef in sync so the click-through interval can read it.
   useEffect(() => {
-    uiVisibleRef.current = showBubble || showSettings
-  }, [showBubble, showSettings])
+    uiVisibleRef.current = showBubble || showSettings || showGameSuggestion
+  }, [showBubble, showSettings, showGameSuggestion])
 
   return (
     <div className="w-full h-full relative p-0 m-0">
 
-      {/* Drag strip — 20px at top, uses startDragging() on mousedown.
-          No data-tauri-drag-region anywhere so WKWebView never sees a
-          "title bar" to double-click-close. */}
+      {/* Drag strip — 20px at top, uses startDragging() on mousedown. */}
       <div
         className="absolute inset-x-0 top-0 h-5 cursor-grab active:cursor-grabbing pointer-events-auto"
         onMouseDown={handleDragMouseDown}
@@ -190,7 +295,39 @@ function App() {
             onEureka={handleEureka}
             onPomo={handlePomo}
             isTopPosition={isTopPosition}
+            isLeftPosition={lastPosition.includes('left')}
           />
+        </div>
+      )}
+
+      {/* Game suggestion bubble */}
+      {showGameSuggestion && !showBubble && !showSettings && (
+        <div className={`absolute inset-x-0 pointer-events-auto ${
+          isTopPosition
+            ? 'top-[200px] bottom-5 flex items-start pt-2'
+            : 'top-5 bottom-[200px] flex items-end pb-2'
+        }`}>
+          <div className="w-full flex flex-col items-center gap-2 px-3">
+            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 px-4 py-3 max-w-[185px] text-center">
+              <p className="text-[11px] text-gray-700 leading-snug">
+                Llevas mucho tiempo trabajando... ¿jugamos? 🎮
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleGameSuggestionAccept}
+                className="px-3 py-1.5 bg-purple-500 hover:bg-purple-400 text-white text-[11px] rounded-full font-medium transition-colors shadow"
+              >
+                ¡Vamos!
+              </button>
+              <button
+                onClick={() => { setShowGameSuggestion(false); startGamesTimer() }}
+                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-[11px] rounded-full font-medium transition-colors shadow"
+              >
+                Ahora no
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -198,10 +335,12 @@ function App() {
       {showSettings && (
         <div className="pointer-events-auto">
           <SettingsPanel
-          onClose={() => setShowSettings(false)}
-          detectedModel={detectedModel}
-          refreshModel={refreshModel}
-        />
+            onClose={() => setShowSettings(false)}
+            detectedModel={detectedModel}
+            refreshModel={refreshModel}
+            gamesTimeLeft={gamesTimeLeft}
+            gamesWindowOpen={gamesWindowOpen}
+          />
         </div>
       )}
 
@@ -229,6 +368,8 @@ function App() {
             hasResponse={!!aiResponse}
             onDoubleClick={handleDoubleClick}
             onSettingsOpen={() => setShowSettings(true)}
+            onGamesOpen={handleGamesOpen}
+            isGaming={gamesWindowOpen}
           />
         </div>
       </div>

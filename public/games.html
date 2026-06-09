@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>DebugDuck Arcade</title>
+<style>
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0; padding: 0;
+  font-family: 'Courier New', Courier, monospace;
+  color: #00ff00;
+}
+html, body {
+  width: 400px; height: 520px;
+  background: #000;
+  overflow: hidden;
+  user-select: none;
+}
+/* Scanlines */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.04) 3px,rgba(0,0,0,0.04) 4px);
+  pointer-events: none; z-index: 9999;
+}
+/* CRT vignette */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  box-shadow: inset 0 0 90px rgba(0,0,0,0.75);
+  pointer-events: none; z-index: 9998;
+}
+@keyframes blink     { 0%,49%{opacity:1}  50%,100%{opacity:0} }
+@keyframes slowblink { 0%,59%{opacity:1}  60%,100%{opacity:0} }
+@keyframes pulse-grn { 0%,100%{color:#00ff00} 50%{color:#ffff00} }
+.blink     { animation: blink 0.55s step-end infinite; }
+.slowblink { animation: slowblink 1s step-end infinite; }
+.pulse-rec { animation: pulse-grn 0.5s step-end infinite; color:#ffff00; }
+
+/* ── LAYOUT ─────────────────────────────────────────────────── */
+#app {
+  display: flex; flex-direction: column;
+  height: 476px;   /* 520 - 44 (controls bar) */
+  padding: 6px; gap: 4px;
+}
+
+/* ── HEADER ─────────────────────────────────────────────────── */
+#header {
+  font-size: 11px; line-height: 1.5;
+  border: 1px solid #00ff00;
+  padding: 6px 8px;
+  flex-shrink: 0;
+}
+#header-title { color:#00ff00; font-weight:bold; }
+#header-mode  { color:#00cc00; }
+#header-score { color:#00aa00; }
+
+/* ── GAME AREA ───────────────────────────────────────────────── */
+#game-area {
+  flex: 1;
+  overflow-y: auto; overflow-x: hidden;
+  min-height: 0;
+  padding-bottom: 8px;
+}
+#game-area::-webkit-scrollbar { width:3px; }
+#game-area::-webkit-scrollbar-thumb { background:#004400; }
+#game-area::-webkit-scrollbar-track { background:#000; }
+
+.game-section { display:none; }
+.game-section.active { display:block; }
+
+/* ── CONTROLS BAR — always fixed at bottom ───────────────────── */
+#controls {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: 44px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 6px;
+  background: #000;
+  border-top: 1px solid #00ff00;
+  z-index: 50;
+}
+.btn {
+  background:#000; border:1px solid #00ff00; color:#00ff00;
+  font-family:'Courier New',monospace; font-size:11px;
+  padding:5px 10px; cursor:pointer; line-height:1;
+}
+.btn:hover { background:#00ff00; color:#000; }
+
+/* ── GAME OVER OVERLAY ───────────────────────────────────────── */
+#gameover-overlay {
+  display: none;
+  position: fixed; top: 44px; left: 0; right: 0; bottom: 44px;
+  background: #000;
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+}
+.game-over-box {
+  text-align: center;
+  padding: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+#go-title { font-size:16px; font-weight:bold; }
+.go-sep { color:#003300; font-size:11px; letter-spacing:1px; }
+#go-duck-msg { color:#00aa00; font-style:italic; font-size:11px; min-height:16px; }
+.go-buttons { display:flex; flex-direction:column; gap:8px; width:80%; margin-top:10px; }
+.go-buttons button {
+  width: 100%; padding: 8px;
+  color: #00ff00; background: #000;
+  border: 1px solid #00ff00;
+  font-family: 'Courier New', monospace;
+  cursor: pointer; font-size: 14px;
+}
+.go-buttons button:hover { background: #00ff00; color: #000; }
+
+/* ── SHARED GAME STYLES ─────────────────────────────────────── */
+.game-message {
+  font-size:11px; color:#00cc00; text-align:center;
+  margin:6px 0; min-height:16px;
+}
+
+/* ── FLAPPY ─────────────────────────────────────────────────── */
+#flappy-canvas {
+  display:block; margin:0 auto;
+  border:1px solid #003300;
+  cursor:pointer;
+}
+
+/* ── QUIZ ───────────────────────────────────────────────────── */
+#quiz-container { font-size:11px; padding:0 2px; }
+#quiz-question {
+  border:1px solid #004400; padding:8px; margin-bottom:6px;
+  font-size:12px; line-height:1.5; min-height:54px;
+}
+#quiz-timer-bar-wrap {
+  height:6px; background:#002200; border:1px solid #004400;
+  margin-bottom:6px;
+}
+#quiz-timer-bar { height:100%; background:#00ff00; transition:none; }
+.quiz-opt {
+  display:block; width:100%; text-align:left;
+  background:#000; border:1px solid #004400; color:#00bb00;
+  font-family:'Courier New',monospace; font-size:11px;
+  padding:5px 8px; margin-bottom:4px; cursor:pointer;
+}
+.quiz-opt:hover:not(:disabled) { background:#002200; color:#00ff00; }
+.quiz-opt.correct { background:#002200; border-color:#00ff00; color:#00ff00; }
+.quiz-opt.wrong   { background:#1a0000; border-color:#440000; color:#440000; }
+.quiz-opt:disabled { cursor:default; }
+#quiz-progress { color:#006600; font-size:10px; margin-bottom:4px; }
+
+/* ── PIXEL ART ──────────────────────────────────────────────── */
+#pixel-container { display:flex; flex-direction:column; align-items:center; gap:6px; padding:2px; }
+#pixel-topic-bar { display:flex; justify-content:space-between; align-items:center; width:256px; }
+#pixel-topic { color:#00ff00; font-weight:bold; font-size:11px; }
+#pixel-timer { color:#ffff00; font-weight:bold; font-size:13px; }
+#pixel-timer.urgent { color:#ff2200; }
+#pixel-grid {
+  display:grid; grid-template-columns:repeat(16,1fr);
+  border:1px solid #003300; gap:0; cursor:crosshair;
+  width:256px; height:256px;
+}
+.px {
+  width:16px; height:16px; background:#000;
+  border-right:1px solid #001100; border-bottom:1px solid #001100;
+}
+#pixel-palette { display:flex; gap:4px; flex-wrap:wrap; justify-content:center; }
+.pal-btn { width:20px; height:20px; border:1px solid #004400; cursor:pointer; }
+#pixel-info { font-size:10px; color:#004400; height:14px; }
+#pixel-controls { display:flex; gap:8px; }
+#pixel-analyzing { text-align:center; font-size:11px; line-height:2; padding:4px 0; }
+
+/* ── TYPING ─────────────────────────────────────────────────── */
+#typing-container { padding:6px 2px; }
+#typing-word {
+  font-size:28px; font-weight:bold; text-align:center;
+  letter-spacing:2px; margin:12px 0 8px; min-height:42px;
+}
+#typing-input {
+  display:block; width:100%; background:#000; border:1px solid #00ff00;
+  color:#00ff00; font-family:'Courier New',monospace; font-size:14px;
+  padding:6px 8px; outline:none;
+}
+#typing-input:focus { border-color:#fff; color:#fff; }
+#typing-stats { font-size:10px; color:#006600; margin-top:6px; text-align:center; }
+#typing-progress-bar { height:4px; background:#002200; border:1px solid #004400; margin-top:6px; }
+#typing-progress-fill { height:100%; background:#00ff00; }
+#typing-start { text-align:center; padding:30px 10px; }
+
+/* ── MATH ───────────────────────────────────────────────────── */
+#math-container { padding:4px 2px; }
+#math-level-select { text-align:center; padding:20px 10px; }
+#math-level-select p { font-size:13px; margin-bottom:12px; color:#00cc00; }
+#math-level-btns { display:flex; gap:10px; justify-content:center; }
+#math-game { display:none; }
+#math-problem { font-size:26px; font-weight:bold; text-align:center; margin:10px 0 8px; }
+#math-timer-bar-wrap { height:6px; background:#002200; border:1px solid #004400; margin-bottom:8px; }
+#math-timer-bar { height:100%; background:#00ff00; }
+#math-input {
+  display:block; width:100%; background:#000; border:1px solid #00ff00;
+  color:#00ff00; font-family:'Courier New',monospace; font-size:18px;
+  padding:6px 8px; outline:none; text-align:center;
+}
+#math-score-line { font-size:10px; color:#006600; text-align:center; margin-top:6px; }
+.game-message { font-size:11px; color:#00cc00; text-align:center; margin:4px 0; min-height:16px; }
+
+/* ── TIC-TAC-TOE ────────────────────────────────────────────── */
+#ttt-container { padding:4px 2px; text-align:center; }
+#ttt-status { font-size:12px; color:#00cc00; margin:6px 0 8px; min-height:18px; }
+#ttt-grid {
+  display:inline-grid; grid-template-columns:repeat(3,76px);
+  gap:0; border:1px solid #00ff00; margin:0 auto;
+}
+.ttt-cell {
+  width:76px; height:76px; background:#000;
+  border:1px solid #004400;
+  font-size:32px; font-weight:bold;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+}
+.ttt-cell:hover:not(.taken) { background:#001800; }
+.ttt-cell.taken  { cursor:default; }
+.ttt-cell.x      { color:#00ff00; }
+.ttt-cell.o      { color:#00aa00; }
+.ttt-cell.win-x  { background:#002200; color:#00ff00; }
+.ttt-cell.win-o  { background:#001100; color:#006600; }
+</style>
+</head>
+<body>
+
+<!-- ── MAIN LAYOUT ─────────────────────────────────────── -->
+<div id="app">
+  <div id="header">
+    <div id="header-title">&gt; DEBUGDUCK ARCADE v1.0 <span class="blink">_</span></div>
+    <div id="header-mode">&gt; MODO: <span id="hdr-mode-name">???</span></div>
+    <div id="header-score">&gt; SCORE: <span id="hdr-score">0000</span> &nbsp; BEST: <span id="hdr-best">0000</span></div>
+  </div>
+
+  <div id="game-area">
+
+    <!-- 1. FLAPPY DUCK -->
+    <div id="game-flappy" class="game-section">
+      <canvas id="flappy-canvas" width="386" height="270"></canvas>
+      <div class="game-message" id="flappy-msg"></div>
+    </div>
+
+    <!-- 2. DEBUG QUIZ -->
+    <div id="game-quiz" class="game-section">
+      <div id="quiz-container">
+        <div id="quiz-progress">&gt; PREGUNTA 1/10</div>
+        <div id="quiz-timer-bar-wrap"><div id="quiz-timer-bar"></div></div>
+        <div id="quiz-question">Cargando...</div>
+        <button class="quiz-opt" id="qopt0"></button>
+        <button class="quiz-opt" id="qopt1"></button>
+        <button class="quiz-opt" id="qopt2"></button>
+        <button class="quiz-opt" id="qopt3"></button>
+      </div>
+    </div>
+
+    <!-- 3. PATO PIXEL -->
+    <div id="game-pixel" class="game-section">
+      <div id="pixel-container">
+        <div id="pixel-topic-bar">
+          <div id="pixel-topic">&gt; ...</div>
+          <div id="pixel-timer"></div>
+        </div>
+        <div id="pixel-info">X:-- Y:--</div>
+        <div id="pixel-grid"></div>
+        <div id="pixel-palette"></div>
+        <div id="pixel-controls">
+          <button class="btn" onclick="pixelClear()">[ LIMPIAR ]</button>
+          <button class="btn" id="pixel-submit-btn" onclick="pixelSubmit()">[ &#x2713; ENVIAR ]</button>
+        </div>
+        <div id="pixel-analyzing" style="display:none">
+          <div class="blink">&gt; ANALIZANDO TU OBRA MAESTRA...</div>
+          <div class="blink">&gt; CONSULTANDO AL PATO...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. RUBBER DUCK TYPING -->
+    <div id="game-typing" class="game-section">
+      <div id="typing-container">
+        <div id="typing-start">
+          <p style="font-size:13px;margin-bottom:8px;color:#00cc00">&gt; RUBBER DUCK TYPING</p>
+          <p style="font-size:11px;color:#006600">30 palabras técnicas</p>
+          <p style="font-size:11px;color:#006600">Escribe cada palabra + ENTER</p>
+          <br>
+          <button class="btn" onclick="typingStart()">&gt; [ INICIAR ] &lt;</button>
+        </div>
+        <div id="typing-game" style="display:none">
+          <div id="typing-word" class="blink">---</div>
+          <input id="typing-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="escribe aquí...">
+          <div id="typing-stats">&gt; PALABRA 0/30 &nbsp; WPM: -- &nbsp; PRECISIÓN: --%</div>
+          <div id="typing-progress-bar"><div id="typing-progress-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. DUCK MATH -->
+    <div id="game-math" class="game-section">
+      <div id="math-container">
+        <div id="math-level-select">
+          <p>&gt; SELECCIONA DIFICULTAD</p>
+          <div id="math-level-btns">
+            <button class="btn" onclick="mathStart('easy')">[ FÁCIL ]</button>
+            <button class="btn" onclick="mathStart('medium')">[ MEDIO ]</button>
+            <button class="btn" onclick="mathStart('hard')">[ DIFÍCIL ]</button>
+          </div>
+        </div>
+        <div id="math-game">
+          <div id="math-score-line">&gt; PROB 0/10 &nbsp; SCORE: 0</div>
+          <div id="math-timer-bar-wrap"><div id="math-timer-bar" style="width:100%"></div></div>
+          <div id="math-problem">?</div>
+          <input id="math-input" type="number" autocomplete="off" placeholder="= ?">
+          <div class="game-message" id="math-feedback"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. TIC-TAC-TOE -->
+    <div id="game-tictactoe" class="game-section">
+      <div id="ttt-container">
+        <div id="ttt-status">&gt; TU TURNO — ERES X</div>
+        <div id="ttt-grid"></div>
+      </div>
+    </div>
+
+  </div><!-- /game-area -->
+</div><!-- /app -->
+
+<!-- ── GAME OVER OVERLAY — content rendered entirely by JS ── -->
+<div id="gameover-overlay"></div>
+
+<!-- ── CONTROLS — fixed at bottom ───────────────────────── -->
+<div id="controls">
+  <button class="btn" onclick="switchRandom()">[ &#x1F500; OTRO JUEGO ]</button>
+  <button class="btn" onclick="exitArcade()">[ &#x2715; SALIR ]</button>
+</div>
+
+<script>
+'use strict';
+
+// ─────────────────────────────────────────────────────────────────
+// AUDIO
+// ─────────────────────────────────────────────────────────────────
+let audioCtx;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+document.addEventListener('click', () => { try { getAudio().resume(); } catch(e){} }, { once: true });
+
+function beep(freq, duration, vol=0.08) {
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+function beepClick()  { beep(800, 0.05); }
+function beepError()  { beep(180, 0.12, 0.12); }
+function beepWin()    { [523, 659, 784].forEach((f, i) => setTimeout(() => beep(f, 0.15), i * 140)); }
+function beepOk()     { beep(440, 0.07); }
+
+// ─────────────────────────────────────────────────────────────────
+// TAURI BRIDGE
+// ─────────────────────────────────────────────────────────────────
+async function tauriInvoke(cmd, args = {}) {
+  if (typeof window !== 'undefined' && window.__TAURI_INTERNALS__) {
+    return window.__TAURI_INTERNALS__.invoke(cmd, args);
+  }
+  console.log('[DEV] invoke:', cmd, args);
+}
+
+let _gameResult = { completed: false, won: false, game: '' };
+function markResult(completed, won, game) { _gameResult = { completed, won, game }; }
+
+async function exitArcade() {
+  beepClick();
+  await tauriInvoke('finish_game', _gameResult);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SCORE PERSISTENCE (localStorage)
+// ─────────────────────────────────────────────────────────────────
+const SCORE_KEYS = {
+  flappy:    'dd_best_flappy',
+  quiz:      'dd_best_quiz',
+  typing:    'dd_best_typing',
+  math:      'dd_best_math',
+  tictactoe: 'dd_best_tictactoe',
+};
+
+function getBest(game) {
+  return parseInt(localStorage.getItem(SCORE_KEYS[game]) || '0');
+}
+
+function saveBest(game, score) {
+  if (!SCORE_KEYS[game] || score <= 0) return false;
+  const prev = getBest(game);
+  if (score > prev) {
+    localStorage.setItem(SCORE_KEYS[game], String(score));
+    return true; // new record
+  }
+  return false;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// HEADER
+// ─────────────────────────────────────────────────────────────────
+function pad4(n) { return String(Math.max(0, n)).padStart(4, '0'); }
+
+function setHeader(name, score, best) {
+  document.getElementById('hdr-mode-name').textContent = name;
+  document.getElementById('hdr-score').textContent = pad4(score);
+  document.getElementById('hdr-best').textContent  = pad4(best);
+}
+function updateScore(n) { document.getElementById('hdr-score').textContent = pad4(n); }
+function updateHdrBest(n) { document.getElementById('hdr-best').textContent = pad4(n); }
+
+// ─────────────────────────────────────────────────────────────────
+// GAME OVER OVERLAY — renderizado completo via innerHTML
+// ─────────────────────────────────────────────────────────────────
+let _replayCallback = null;
+
+function replayGame() {
+  document.getElementById('gameover-overlay').style.display = 'none';
+  updateScore(0);
+  if (_replayCallback) _replayCallback();
+}
+
+function goSwitchRandom() {
+  document.getElementById('gameover-overlay').style.display = 'none';
+  switchRandom();
+}
+
+function showGameOver({ title, score, gameId, duckMsg, onReplay }) {
+  _replayCallback = onReplay || null;
+
+  const isNew = saveBest(gameId, score);
+  const best  = getBest(gameId);
+
+  updateScore(score);
+  updateHdrBest(best);
+
+  const overlay = document.getElementById('gameover-overlay');
+  overlay.innerHTML = `
+    <div class="game-over-box">
+      <div id="go-title">&gt; ${title}</div>
+      <div class="go-sep">&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;</div>
+      <div>SCORE: ${pad4(score)}</div>
+      <div> BEST: ${pad4(best)}</div>
+      ${isNew ? '<div class="pulse-rec">&#9733; NUEVO RECORD! &#9733;</div>' : ''}
+      <div id="go-duck-msg">${duckMsg || ''}</div>
+      <div class="go-sep">&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;</div>
+      <div class="go-buttons">
+        <button onclick="replayGame()">[ &#9654; JUGAR DE NUEVO ]</button>
+        <button onclick="goSwitchRandom()">[ &#x1F500; OTRO JUEGO ]</button>
+        <button onclick="exitArcade()">[ &#x2715; CERRAR ]</button>
+      </div>
+    </div>
+  `;
+  overlay.style.display = 'flex';
+}
+
+// ─────────────────────────────────────────────────────────────────
+// GAME SWITCHING
+// ─────────────────────────────────────────────────────────────────
+const GAME_IDS   = ['flappy','quiz','pixel','typing','math','tictactoe'];
+const GAME_NAMES = {
+  flappy:'PATO AL AGUA', quiz:'DEBUG QUIZ', pixel:'PATO PIXEL',
+  typing:'RUBBER DUCK TYPING', math:'DUCK MATH', tictactoe:'3 EN RAYA'
+};
+const GAME_STOPS  = { flappy:flappyStop, quiz:quizStop, pixel:pixelStop, typing:typingStop, math:mathStop, tictactoe:()=>{} };
+const GAME_STARTS = { flappy:flappyInit, quiz:quizStart, pixel:pixelInit, typing:typingInit, math:mathInit, tictactoe:tttInit };
+
+let currentGame = null;
+
+function switchTo(id) {
+  document.getElementById('gameover-overlay').style.display = 'none';
+  if (currentGame) {
+    GAME_STOPS[currentGame]?.();
+    document.getElementById('game-' + currentGame).classList.remove('active');
+  }
+  currentGame = id;
+  document.getElementById('game-' + id).classList.add('active');
+  const best = SCORE_KEYS[id] ? getBest(id) : 0;
+  setHeader(GAME_NAMES[id], 0, best);
+  GAME_STARTS[id]?.();
+}
+
+function switchRandom() {
+  beepClick();
+  const others = GAME_IDS.filter(g => g !== currentGame);
+  switchTo(others[Math.floor(Math.random() * others.length)]);
+}
+
+// ═════════════════════════════════════════════════════════════════
+// GAME 1 ── FLAPPY DUCK
+// ═════════════════════════════════════════════════════════════════
+const F = {
+  canvas:null, ctx:null,
+  duck:{x:65, y:135, vy:0},
+  pipes:[], score:0,
+  running:false, started:false,
+  frameId:null, pipeTimer:0, speed:2.5,
+  W:386, H:270, GAP:128
+};
+
+function flappyInit() {
+  F.canvas = document.getElementById('flappy-canvas');
+  F.ctx    = F.canvas.getContext('2d');
+  document.removeEventListener('keydown', flappyKey);
+  document.addEventListener('keydown', flappyKey);
+  flappyReset();
+  flappyDrawWait();
+}
+
+function flappyStop() {
+  cancelAnimationFrame(F.frameId);
+  F.running = false;
+  document.removeEventListener('keydown', flappyKey);
+  if (F.canvas) F.canvas.onclick = null;
+}
+
+function flappyKey(e) {
+  if (currentGame !== 'flappy') return;
+  if (e.code === 'Space') { e.preventDefault(); flappyJump(); }
+}
+
+function flappyReset() {
+  cancelAnimationFrame(F.frameId);
+  F.duck = {x:65, y:135, vy:0};
+  F.pipes = []; F.score = 0;
+  F.running = false; F.started = false;
+  F.pipeTimer = 0; F.speed = 2.5;
+  updateScore(0);
+  document.getElementById('flappy-msg').textContent = '';
+  if (F.canvas) F.canvas.onclick = flappyJump;
+}
+
+function flappyJump() {
+  if (!F.started) {
+    F.started = true; F.running = true;
+    flappyReset(); F.started = true; F.running = true;
+    F.frameId = requestAnimationFrame(flappyLoop);
+  }
+  F.duck.vy = -7.2;
+  beepClick();
+}
+
+function flappyLoop() {
+  if (!F.running) return;
+  flappyUpdate();
+  flappyDraw();
+  F.frameId = requestAnimationFrame(flappyLoop);
+}
+
+function flappyUpdate() {
+  F.duck.vy = Math.min(F.duck.vy + 0.42, 10);
+  F.duck.y += F.duck.vy;
+
+  F.pipeTimer++;
+  if (F.pipeTimer >= 82) {
+    F.pipeTimer = 0;
+    const top = 28 + Math.random() * (F.H - F.GAP - 60);
+    F.pipes.push({ x: F.W + 2, top, bottom: top + F.GAP, scored: false });
+  }
+
+  for (const p of F.pipes) {
+    p.x -= F.speed;
+    if (!p.scored && p.x + 38 < F.duck.x) {
+      p.scored = true; F.score++;
+      updateScore(F.score);
+      if (F.score % 5 === 0) F.speed = Math.min(F.speed + 0.35, 6);
+    }
+  }
+  F.pipes = F.pipes.filter(p => p.x > -50);
+
+  if (flappyCollide()) flappyGameOver();
+}
+
+function flappyCollide() {
+  const dl=F.duck.x-22, dr=F.duck.x+22, dt=F.duck.y-4, db=F.duck.y+26;
+  if (db > F.H - 6 || dt < 0) return true;
+  for (const p of F.pipes) {
+    if (dr > p.x + 2 && dl < p.x + 38) {
+      if (dt < p.top || db > p.bottom) return true;
+    }
+  }
+  return false;
+}
+
+function flappyDraw() {
+  const ctx=F.ctx;
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,F.W,F.H);
+  ctx.fillStyle='#001a00';
+  for (let x=0;x<F.W;x+=24) for (let y=0;y<F.H;y+=24) ctx.fillRect(x,y,1,1);
+  ctx.fillStyle='#005500';
+  for (const p of F.pipes) {
+    ctx.fillRect(p.x,0,38,p.top); ctx.fillRect(p.x,p.bottom,38,F.H);
+    ctx.fillStyle='#007700';
+    ctx.fillRect(p.x-4,p.top-14,46,14); ctx.fillRect(p.x-4,p.bottom,46,14);
+    ctx.fillStyle='#005500';
+  }
+  ctx.fillStyle='#003300'; ctx.fillRect(0,F.H-5,F.W,5);
+  ctx.fillStyle='#00ff00'; ctx.font='13px Courier New';
+  ctx.fillText(">('v'<)", F.duck.x-26, F.duck.y+4);
+  ctx.fillText(" (   ) ", F.duck.x-26, F.duck.y+17);
+  ctx.fillText("  ^ ^  ", F.duck.x-26, F.duck.y+28);
+}
+
+function flappyDrawWait() {
+  if (!F.ctx) return;
+  const ctx=F.ctx;
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,F.W,F.H);
+  ctx.fillStyle='#003300';
+  for (let x=0;x<F.W;x+=24) for (let y=0;y<F.H;y+=24) ctx.fillRect(x,y,1,1);
+  ctx.fillStyle='#00ff00'; ctx.font='13px Courier New';
+  ctx.fillText(">('v'<)",163,115); ctx.fillText(" (   ) ",163,128); ctx.fillText("  ^ ^  ",163,141);
+  ctx.fillStyle='#004400'; ctx.font='11px Courier New';
+  ctx.fillText('[ CLICK O SPACE PARA VOLAR ]',76,185);
+  ctx.fillText('[ EVITA LAS TUBERIAS ]',110,200);
+}
+
+function flappyGameOver() {
+  F.running = false; F.started = false;
+  cancelAnimationFrame(F.frameId);
+  beepError();
+  if (F.canvas) F.canvas.onclick = null;
+
+  // brief crash flash on canvas
+  const ctx = F.ctx;
+  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(110,100,170,50);
+  ctx.fillStyle='#00ff00'; ctx.font='bold 18px Courier New';
+  ctx.fillText('x CRASH x', 136, 132);
+
+  const score = F.score;
+  markResult(score > 0, false, 'flappy');
+
+  let duckMsg;
+  if (score === 0)     duckMsg = '"¿Ya? No has durado nada."';
+  else if (score < 5)  duckMsg = '"Necesitas práctica."';
+  else if (score < 15) duckMsg = '"No está mal para empezar."';
+  else                 duckMsg = '"Admito que eso impresiona un poco."';
+
+  setTimeout(() => {
+    showGameOver({
+      title:   'GAME OVER',
+      score,
+      gameId:  'flappy',
+      duckMsg,
+      onReplay: () => { flappyReset(); flappyDrawWait(); }
+    });
+  }, 700);
+}
+
+// ═════════════════════════════════════════════════════════════════
+// GAME 2 ── DEBUG QUIZ
+// ═════════════════════════════════════════════════════════════════
+const QUIZ_BANK = [
+  {q:"¿Qué hace el operador === en JavaScript?",         c:"Comparación estricta (tipo y valor)",               w:["Comparación suelta (solo valor)","Asignación de variable","Operador de exponenciación"]},
+  {q:"¿Qué significa DRY en programación?",              c:"Don't Repeat Yourself",                             w:["Do Refactor Yearly","Dynamic Runtime Yield","Direct Resource Yield"]},
+  {q:"¿Complejidad temporal del binary search?",         c:"O(log n)",                                          w:["O(n)","O(n²)","O(1)"]},
+  {q:"¿Qué es un closure en JavaScript?",                c:"Función que accede a su scope externo",             w:["Un método privado de clase","Un tipo de promesa","Un patrón de herencia"]},
+  {q:"¿Para qué sirve git stash?",                       c:"Guardar cambios sin hacer commit",                  w:["Fusionar ramas","Ver el historial","Revertir el último commit"]},
+  {q:"¿Qué significa SOLID?",                            c:"5 principios de diseño orientado a objetos",        w:["Un lenguaje de scripting","Un protocolo de red","Un patrón de arquitectura"]},
+  {q:"¿Qué es un deadlock?",                             c:"Dos procesos bloqueados esperándose mutuamente",    w:["Un bucle infinito","Un error de memoria","Un fallo de red"]},
+  {q:"¿Diferencia principal entre null y undefined?",    c:"null es asignado; undefined es sin inicializar",    w:["Son exactamente iguales","undefined es un número","null solo existe en TypeScript"]},
+  {q:"¿Qué hace Promise.all()?",                         c:"Ejecuta promesas en paralelo y espera todas",       w:["Ejecuta promesas en serie","Cancela promesas fallidas","Retorna la primera resuelta"]},
+  {q:"¿Qué hace Array.prototype.reduce()?",              c:"Acumula valores del array en un único resultado",   w:["Filtra elementos","Ordena el array","Mapea cada elemento"]},
+  {q:"¿Qué es el event loop en Node.js?",                c:"Mecanismo para operaciones asíncronas no bloqueantes", w:["Un bucle for nativo","El ciclo de vida del servidor","Un tipo de middleware"]},
+  {q:"¿Qué hace git rebase?",                            c:"Reaplica commits sobre otra base",                  w:["Elimina la rama","Fusiona con merge commit","Revierte todos los cambios"]},
+  {q:"¿Qué es Big O notation?",                          c:"Medida de complejidad computacional en el peor caso", w:["Una versión de JavaScript","Un framework de testing","Un tipo de variable"]},
+  {q:"¿Qué es un callback?",                             c:"Función pasada como argumento a otra función",      w:["Un tipo de clase","Un protocolo HTTP","Una promesa resuelta"]},
+  {q:"¿Qué es el DOM?",                                  c:"Representación en memoria de la estructura HTML",   w:["Un lenguaje de estilos","Un sistema de archivos","Un protocolo de red"]},
+  {q:"¿Qué es Docker?",                                  c:"Plataforma de contenedores para apps",              w:["Un lenguaje de programación","Un sistema operativo","Un servidor web"]},
+  {q:"¿Qué es TypeScript?",                              c:"JavaScript con tipos estáticos en compilación",     w:["Un lenguaje completamente nuevo","Una librería de React","Un framework de Node.js"]},
+  {q:"¿Qué es un índice en base de datos?",              c:"Estructura que acelera las búsquedas",              w:["Una clave foránea","Un tipo de JOIN","Un procedimiento almacenado"]},
+  {q:"¿Qué es el principio de responsabilidad única?",   c:"Cada clase tiene una sola razón para cambiar",      w:["Solo un developer por módulo","Una función por archivo","Solo herencia simple"]},
+  {q:"¿Qué es WebSocket?",                               c:"Protocolo de comunicación bidireccional en tiempo real", w:["Un tipo de base de datos","Un framework CSS","Un gestor de paquetes"]},
+  {q:"¿Qué hace el método map() en arrays?",             c:"Crea un nuevo array transformando cada elemento",   w:["Filtra elementos según condición","Busca un elemento","Ordena el array"]},
+  {q:"¿Qué es memoización?",                             c:"Caché de resultados para evitar recálculos",        w:["Una técnica de compresión","Un tipo de herencia","Un patrón de base de datos"]},
+];
+
+let quizQuestions=[], quizIdx=0, quizScore=0, quizTimer=null, quizAnswered=false;
+
+function quizStop() { clearInterval(quizTimer); }
+
+function quizStart() {
+  clearInterval(quizTimer);
+  quizQuestions = [...QUIZ_BANK].sort(()=>Math.random()-0.5).slice(0,10);
+  quizIdx = 0; quizScore = 0;
+  updateScore(0);
+  // Reset all quiz UI
+  document.getElementById('quiz-progress').style.display = 'block';
+  document.getElementById('quiz-timer-bar-wrap').style.display = 'block';
+  document.getElementById('quiz-question').style.display = 'block';
+  document.querySelectorAll('.quiz-opt').forEach(b => { b.style.display='block'; b.disabled=false; b.className='quiz-opt'; });
+  quizShowQuestion();
+}
+
+let quizCorrectIdx = -1;
+function quizShowQuestion() {
+  if (quizIdx >= quizQuestions.length) { quizFinish(); return; }
+  quizAnswered = false;
+  const q = quizQuestions[quizIdx];
+  const opts = [q.c,...q.w].sort(()=>Math.random()-0.5);
+  quizCorrectIdx = opts.indexOf(q.c);
+  document.getElementById('quiz-progress').textContent = '> PREGUNTA '+(quizIdx+1)+'/10';
+  document.getElementById('quiz-question').textContent = q.q;
+  for (let i=0;i<4;i++) {
+    const btn = document.getElementById('qopt'+i);
+    btn.textContent = String.fromCharCode(65+i)+') '+opts[i];
+    btn.className = 'quiz-opt'; btn.disabled = false;
+    btn.onclick = () => quizAnswer(i);
+  }
+  clearInterval(quizTimer);
+  let secs = 15;
+  document.getElementById('quiz-timer-bar').style.width='100%';
+  document.getElementById('quiz-timer-bar').style.background='#00ff00';
+  quizTimer = setInterval(() => {
+    secs--;
+    const bar = document.getElementById('quiz-timer-bar');
+    bar.style.width = (secs/15*100)+'%';
+    if (secs<=5) bar.style.background='#ff4400';
+    if (secs<=0) { clearInterval(quizTimer); quizAnswer(-1); }
+  }, 1000);
+}
+
+function quizAnswer(chosen) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  clearInterval(quizTimer);
+  if (chosen === quizCorrectIdx) { quizScore++; updateScore(quizScore); beepOk(); }
+  else beepError();
+  for (let i=0;i<4;i++) {
+    const btn = document.getElementById('qopt'+i);
+    btn.disabled = true;
+    if (i===quizCorrectIdx) btn.className='quiz-opt correct';
+    else if (i===chosen)    btn.className='quiz-opt wrong';
+  }
+  quizIdx++;
+  setTimeout(quizShowQuestion, 900);
+}
+
+function quizFinish() {
+  clearInterval(quizTimer);
+  const score = quizScore;
+  markResult(true, score >= 7, 'quiz');
+
+  let duckMsg;
+  if (score===10)      { duckMsg='"Impresionante. Casi tan listo como yo."'; beepWin(); }
+  else if (score>=7)   { duckMsg='"No está mal para ser humano."'; beepOk(); }
+  else if (score>=4)   { duckMsg='"Mediocre. Como tu código de los lunes."'; }
+  else                 { duckMsg='"¿Seguro que eres programador?"'; beepError(); }
+
+  showGameOver({ title: score>=7 ? 'VICTORIA' : 'GAME OVER', score, gameId:'quiz', duckMsg, onReplay: quizStart });
+}
+
+// ═════════════════════════════════════════════════════════════════
+// GAME 3 ── PATO PIXEL
+// ═════════════════════════════════════════════════════════════════
+const PIX_COLORS=['#000000','#00ff00','#008800','#004400','#ffffff','#ffff00','#ff8800','#ff2200'];
+const PIX_TOPICS=[
+  {text:'UN PATO',       emoji:'🦆'},
+  {text:'UN ORDENADOR',  emoji:'💻'},
+  {text:'UN BUG',        emoji:'🐛'},
+  {text:'UNA TAZA DE CAFÉ', emoji:'☕'},
+  {text:'UN COHETE',     emoji:'🚀'},
+  {text:'UN GATO',       emoji:'🐱'},
+  {text:'UN ÁRBOL',      emoji:'🌳'},
+  {text:'UNA CASA',      emoji:'🏠'},
+  {text:'UN CORAZÓN',    emoji:'❤️'},
+  {text:'UN RAYO',       emoji:'⚡'},
+];
+let pixData=new Array(256).fill('#000000'), pixColor='#00ff00', pixPainting=false;
+let currentPixelTopic='', pixelTimerInterval=null, pixelTimerSecs=60;
+
+function pixelInit() {
+  clearInterval(pixelTimerInterval);
+  // Pick a random topic and show it
+  const t = PIX_TOPICS[Math.floor(Math.random() * PIX_TOPICS.length)];
+  currentPixelTopic = t.text;
+  document.getElementById('pixel-topic').textContent = '> DIBUJA: ' + t.text + ' ' + t.emoji;
+
+  // Start 60-second countdown
+  pixelTimerSecs = 60;
+  const timerEl = document.getElementById('pixel-timer');
+  timerEl.className = '';
+  timerEl.textContent = '> 60s';
+  pixelTimerInterval = setInterval(() => {
+    pixelTimerSecs--;
+    timerEl.textContent = '> ' + pixelTimerSecs + 's';
+    if (pixelTimerSecs <= 10) timerEl.className = 'urgent blink';
+    if (pixelTimerSecs <= 0) { clearInterval(pixelTimerInterval); pixelSubmit(); }
+  }, 1000);
+
+  // Reset grid
+  const grid = document.getElementById('pixel-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 256; i++) {
+    const c = document.createElement('div');
+    c.className = 'px'; c.dataset.i = i; grid.appendChild(c);
+  }
+  pixData = new Array(256).fill('#000000'); pixColor = '#00ff00';
+
+  // Reset palette
+  const pal = document.getElementById('pixel-palette');
+  pal.innerHTML = '';
+  PIX_COLORS.forEach((c, idx) => {
+    const btn = document.createElement('div');
+    btn.className = 'pal-btn';
+    btn.style.background = c;
+    btn.style.border = idx === 1 ? '2px solid #00ff00' : '1px solid #004400';
+    btn.onclick = () => {
+      pixColor = c;
+      document.querySelectorAll('.pal-btn').forEach((b, i) => {
+        b.style.border = i === idx ? '2px solid #00ff00' : '1px solid #004400';
+      });
+    };
+    pal.appendChild(btn);
+  });
+
+  // Restore controls visibility
+  document.getElementById('pixel-controls').style.display = 'flex';
+  document.getElementById('pixel-analyzing').style.display = 'none';
+  document.getElementById('pixel-submit-btn').disabled = false;
+
+  // Mouse events (clone node to remove old listeners)
+  const newGrid = grid.cloneNode(true);
+  grid.parentNode.replaceChild(newGrid, grid);
+  newGrid.addEventListener('mousedown', (e) => { if (e.button === 2) return; pixPainting = true; pixPaint(e); });
+  newGrid.addEventListener('mousemove', (e) => { if (pixPainting) pixPaint(e); });
+  newGrid.addEventListener('mouseup', () => { pixPainting = false; });
+  newGrid.addEventListener('mouseleave', () => { pixPainting = false; });
+  newGrid.addEventListener('contextmenu', (e) => { e.preventDefault(); pixErase(e); });
+  newGrid.addEventListener('mouseover', (e) => {
+    const cell = e.target.closest('.px'); if (!cell) return;
+    const i = parseInt(cell.dataset.i);
+    document.getElementById('pixel-info').textContent = 'X:' + String(i % 16).padStart(2, '0') + ' Y:' + String(Math.floor(i / 16)).padStart(2, '0');
+  });
+}
+
+function pixelStop() {
+  clearInterval(pixelTimerInterval);
+}
+
+function pixPaint(e) {
+  const cell=e.target.closest?.('.px')||e.target;
+  if(!cell||!cell.dataset.i)return;
+  const i=parseInt(cell.dataset.i);
+  pixData[i]=pixColor; cell.style.background=pixColor;
+}
+function pixErase(e) {
+  const cell=e.target.closest?.('.px')||e.target;
+  if(!cell||!cell.dataset.i)return;
+  const i=parseInt(cell.dataset.i);
+  pixData[i]='#000000'; cell.style.background='#000000';
+}
+function pixelClear() {
+  pixData.fill('#000000');
+  document.querySelectorAll('.px').forEach(c => c.style.background = '#000000');
+  beepClick();
+}
+
+async function pixelSubmit() {
+  clearInterval(pixelTimerInterval);
+  document.getElementById('pixel-submit-btn').disabled = true;
+
+  // Build 16×16 source canvas from pixData
+  const src = document.createElement('canvas');
+  src.width = 16; src.height = 16;
+  const sctx = src.getContext('2d');
+  for (let i = 0; i < 256; i++) {
+    sctx.fillStyle = pixData[i];
+    sctx.fillRect(i % 16, Math.floor(i / 16), 1, 1);
+  }
+
+  // Scale up to 128×128 (pixel-perfect) so Claude can see it better
+  const off = document.createElement('canvas');
+  off.width = 128; off.height = 128;
+  const octx = off.getContext('2d');
+  octx.imageSmoothingEnabled = false;
+  octx.drawImage(src, 0, 0, 128, 128);
+  const base64 = off.toDataURL('image/png').replace('data:image/png;base64,', '');
+
+  // Show analyzing state
+  document.getElementById('pixel-controls').style.display = 'none';
+  document.getElementById('pixel-timer').textContent = '';
+  document.getElementById('pixel-analyzing').style.display = 'block';
+
+  let score = 20 + Math.floor(Math.random() * 41); // fallback 20–60
+  let comment = 'Mi conexión falló. Asumo que era horrible.';
+
+  try {
+    const raw = await window.__TAURI_INTERNALS__.invoke('score_pixel_art', {
+      base64Image: base64,
+      topic: currentPixelTopic,
+    });
+    const result = JSON.parse(raw);
+    score = Math.max(0, Math.min(100, parseInt(result.score) || score));
+    comment = result.comment || comment;
+  } catch (err) {
+    comment = 'Mi visión local falla hoy. Culpa del hardware.';
+  }
+
+  document.getElementById('pixel-analyzing').style.display = 'none';
+  document.getElementById('pixel-controls').style.display = 'flex';
+
+  markResult(true, score >= 60, 'pixel');
+  showGameOver({
+    title: 'ANÁLISIS COMPLETADO',
+    score,
+    gameId: 'pixel',
+    duckMsg: comment,
+    onReplay: pixelInit,
+  });
+}
+
+// ═════════════════════════════════════════════════════════════════
+// GAME 4 ── RUBBER DUCK TYPING
+// ═════════════════════════════════════════════════════════════════
+const TYPING_WORDS=[
+  'React','TypeScript','useState','useEffect','useCallback','useMemo','useRef',
+  'async','await','Promise','callback','closure','prototype','recursion',
+  'algorithm','debugging','refactoring','deployment','webpack','eslint',
+  'prettier','docker','kubernetes','postgresql','mongodb','redis',
+  'graphql','websocket','tailwind','zustand','redux','vite','rollup',
+  'middleware','singleton','observer','factory','adapter','binary',
+  'hexadecimal','boolean','integer','float','compiler','interpreter',
+  'runtime','garbage','collector','immutable','mutable','interface',
+  'abstract','polymorphism','encapsulation','inheritance','composition',
+  'dependency','injection','microservices','authentication','encryption',
+  'hashing','pagination','caching','indexing','transaction','migration',
+  'endpoint','interceptor','decorator','serialization','throttling',
+  'debouncing','memoization','currying','destructuring','hoisting',
+  'mutation','observable','subscriber','generator','iterator','symbol',
+  'bundler','transpiler','polyfill','tree-shaking','minification',
+  'linting','testing','mocking','snapshot','coverage','benchmark',
+  'profiling','optimization','bottleneck','latency','throughput',
+  'scalability','resilience','orchestration','containerization','serverless',
+  'coroutine','concurrency','parallelism','semaphore','mutex','thread',
+  'socket','buffer','stream','pipeline','queue','stack','heap'
+];
+
+let typingWords=[],typingIdx=0,typingErrors=0,typingStartTime=0,typingActive=false;
+
+function typingInit() {
+  document.getElementById('typing-start').style.display='block';
+  document.getElementById('typing-game').style.display='none';
+}
+function typingStop() {
+  typingActive=false;
+  const inp=document.getElementById('typing-input');
+  if(inp) inp.removeEventListener('keydown',typingKey);
+}
+function typingStart() {
+  typingWords=[...TYPING_WORDS].sort(()=>Math.random()-0.5).slice(0,30);
+  typingIdx=0; typingErrors=0; typingActive=true; typingStartTime=Date.now();
+  document.getElementById('typing-start').style.display='none';
+  document.getElementById('typing-game').style.display='block';
+  document.getElementById('typing-progress-fill').style.width='0%';
+  const inp=document.getElementById('typing-input');
+  inp.value='';
+  inp.removeEventListener('keydown',typingKey);
+  inp.addEventListener('keydown',typingKey);
+  typingShowWord();
+  setTimeout(()=>inp.focus(),50);
+}
+function typingShowWord() {
+  if(typingIdx>=typingWords.length){typingFinish();return;}
+  document.getElementById('typing-word').textContent=typingWords[typingIdx];
+  document.getElementById('typing-input').value='';
+  updateScore(typingIdx);
+  document.getElementById('typing-progress-fill').style.width=(typingIdx/30*100)+'%';
+  const elapsed=(Date.now()-typingStartTime)/60000;
+  const wpm=elapsed>0?Math.round((typingIdx-typingErrors)/elapsed):0;
+  const acc=typingIdx>0?Math.round((1-typingErrors/typingIdx)*100):100;
+  document.getElementById('typing-stats').textContent='> PALABRA '+typingIdx+'/30   WPM: '+wpm+'   PRECISIÓN: '+acc+'%';
+}
+function typingKey(e) {
+  if(!typingActive)return;
+  if(e.key==='Enter'||e.key===' '){
+    e.preventDefault();
+    const val=document.getElementById('typing-input').value.trim();
+    if(!val.length)return;
+    if(val!==typingWords[typingIdx]){typingErrors++;beepError();}else{beepOk();}
+    typingIdx++; typingShowWord();
+  }
+}
+function typingFinish() {
+  typingActive=false;
+  const elapsed=(Date.now()-typingStartTime)/60000;
+  const correct=30-typingErrors;
+  const wpm=Math.round(correct/elapsed);
+  const acc=Math.round((correct/30)*100);
+  markResult(true,wpm>=60,'typing');
+
+  let duckMsg;
+  if(wpm>80)      {duckMsg='"Rápido. Para ser humano."'; beepWin();}
+  else if(wpm>=60){duckMsg='"Aceptable. El pato teclea más rápido."'; beepOk();}
+  else             {duckMsg='"¿Escribes con dos dedos?"'; beepError();}
+
+  showGameOver({
+    title: wpm>=60?'BUEN RESULTADO':'GAME OVER',
+    score: wpm,
+    gameId: 'typing',
+    duckMsg,
+    onReplay: typingStart
+  });
+}
+
+// ═════════════════════════════════════════════════════════════════
+// GAME 5 ── DUCK MATH
+// ═════════════════════════════════════════════════════════════════
+let mathLevel='easy',mathProblem={q:'',a:0},mathProbIdx=0;
+let mathScore=0,mathTimer=null,mathTimerSecs=0,mathActive=false;
+
+function mathInit() {
+  document.getElementById('math-level-select').style.display='block';
+  document.getElementById('math-game').style.display='none';
+  updateScore(0);
+}
+function mathStop() {
+  mathActive=false; clearInterval(mathTimer);
+  const inp=document.getElementById('math-input');
+  if(inp) inp.removeEventListener('keydown',mathKey);
+}
+function mathReset() { mathStop(); mathInit(); }
+
+function mathGenProblem(level) {
+  let q,a;
+  if(level==='easy'){
+    const op=Math.random()<0.5?'+':'-';
+    const x=Math.floor(Math.random()*20)+1;
+    const y=op==='-'?Math.floor(Math.random()*x)+1:Math.floor(Math.random()*20)+1;
+    a=op==='+'?x+y:x-y; q=x+' '+op+' '+y;
+  } else if(level==='medium'){
+    const x=Math.floor(Math.random()*11)+2;
+    const y=Math.floor(Math.random()*11)+2;
+    a=x*y; q=x+' × '+y;
+  } else {
+    const choice=Math.floor(Math.random()*3);
+    if(choice===0){const n=Math.floor(Math.random()*7)+2;a=Math.pow(2,n);q='2 ^ '+n;}
+    else if(choice===1){const n=Math.floor(Math.random()*12)+2;a=n*n;q=n+' ²';}
+    else{const d=Math.floor(Math.random()*11)+2,m=Math.floor(Math.random()*11)+2;a=m;q=(d*m)+' ÷ '+d;}
+  }
+  return {q:q+' =',a};
+}
+function mathStart(level) {
+  mathLevel=level; mathProbIdx=0; mathScore=0; mathActive=true;
+  document.getElementById('math-level-select').style.display='none';
+  document.getElementById('math-game').style.display='block';
+  updateScore(0);
+  const inp=document.getElementById('math-input');
+  inp.removeEventListener('keydown',mathKey);
+  inp.addEventListener('keydown',mathKey);
+  mathNextProblem();
+}
+function mathNextProblem() {
+  if(mathProbIdx>=10){mathFinish();return;}
+  mathProblem=mathGenProblem(mathLevel);
+  document.getElementById('math-problem').textContent=mathProblem.q;
+  document.getElementById('math-input').value='';
+  document.getElementById('math-feedback').textContent='';
+  document.getElementById('math-score-line').textContent='> PROB '+(mathProbIdx+1)+'/10   SCORE: '+mathScore;
+  clearInterval(mathTimer);
+  mathTimerSecs=8;
+  const bar=document.getElementById('math-timer-bar');
+  bar.style.width='100%'; bar.style.background='#00ff00';
+  mathTimer=setInterval(()=>{
+    mathTimerSecs--;
+    bar.style.width=(mathTimerSecs/8*100)+'%';
+    if(mathTimerSecs<=3)bar.style.background='#ff4400';
+    if(mathTimerSecs<=0){clearInterval(mathTimer);document.getElementById('math-feedback').textContent='ERA: '+mathProblem.a;beepError();mathProbIdx++;setTimeout(mathNextProblem,900);}
+  },1000);
+  setTimeout(()=>document.getElementById('math-input').focus(),50);
+}
+function mathKey(e) {
+  if(!mathActive)return;
+  if(e.key==='Enter'){
+    e.preventDefault(); clearInterval(mathTimer);
+    const val=parseInt(document.getElementById('math-input').value);
+    if(val===mathProblem.a){
+      const bonus=Math.ceil(mathTimerSecs/2);
+      mathScore+=1+bonus; updateScore(mathScore);
+      document.getElementById('math-feedback').textContent='✓ +'+( 1+bonus);
+      beepOk();
+    } else {
+      document.getElementById('math-feedback').textContent='✗ ERA: '+mathProblem.a; beepError();
+    }
+    mathProbIdx++; setTimeout(mathNextProblem,750);
+  }
+}
+function mathFinish() {
+  mathActive=false; clearInterval(mathTimer);
+  const score=mathScore;
+  markResult(true,score>=15,'math');
+
+  let duckMsg;
+  if(score>=20)     {duckMsg='"Calculadora humana. Casi útil."'; beepWin();}
+  else if(score>=12){duckMsg='"Decente. Para un developer."'; beepOk();}
+  else               {duckMsg='"¿Usas calculadora para la propina?"'; beepError();}
+
+  showGameOver({ title:score>=15?'BIEN HECHO':'GAME OVER', score, gameId:'math', duckMsg, onReplay:mathReset });
+}
+
+// ═════════════════════════════════════════════════════════════════
+// GAME 6 ── TIC-TAC-TOE (minimax perfecto)
+// ═════════════════════════════════════════════════════════════════
+let tttBoard=Array(9).fill(''), tttOver=false;
+const TTT_LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+function tttInit() {
+  const grid=document.getElementById('ttt-grid');
+  grid.innerHTML='';
+  for(let i=0;i<9;i++){
+    const c=document.createElement('div');
+    c.className='ttt-cell'; c.dataset.i=i; c.onclick=()=>tttMove(i);
+    grid.appendChild(c);
+  }
+  tttReset();
+}
+function tttReset() {
+  tttBoard=Array(9).fill(''); tttOver=false;
+  document.getElementById('ttt-status').textContent='> TU TURNO — ERES X';
+  document.querySelectorAll('.ttt-cell').forEach(c=>{c.textContent='';c.className='ttt-cell';});
+  updateScore(0);
+}
+function tttCheckWinner(board) {
+  for(const[a,b,c]of TTT_LINES){if(board[a]&&board[a]===board[b]&&board[a]===board[c])return{winner:board[a],line:[a,b,c]};}
+  if(board.every(c=>c))return{winner:'draw'};
+  return null;
+}
+function minimax(board,depth,isMax) {
+  const r=tttCheckWinner(board);
+  if(r){if(r.winner==='O')return 10-depth;if(r.winner==='X')return depth-10;return 0;}
+  if(isMax){let b=-Infinity;for(let i=0;i<9;i++){if(!board[i]){board[i]='O';b=Math.max(b,minimax(board,depth+1,false));board[i]='';}}return b;}
+  else{let b=Infinity;for(let i=0;i<9;i++){if(!board[i]){board[i]='X';b=Math.min(b,minimax(board,depth+1,true));board[i]='';}}return b;}
+}
+function tttBestMove(board) {
+  let best=-Infinity,move=-1;
+  for(let i=0;i<9;i++){if(!board[i]){board[i]='O';const v=minimax(board,0,false);board[i]='';if(v>best){best=v;move=i;}}}
+  return move;
+}
+function tttMove(i) {
+  if(tttOver||tttBoard[i])return;
+  tttBoard[i]='X'; beepClick();
+  const cell=document.querySelector('.ttt-cell[data-i="'+i+'"]');
+  cell.textContent='X'; cell.className='ttt-cell taken x';
+  const after=tttCheckWinner(tttBoard);
+  if(after){tttEnd(after);return;}
+  document.getElementById('ttt-status').textContent='> PENSANDO...';
+  setTimeout(()=>{
+    const ai=tttBestMove(tttBoard);
+    if(ai===-1){tttEnd({winner:'draw'});return;}
+    tttBoard[ai]='O';
+    const aiCell=document.querySelector('.ttt-cell[data-i="'+ai+'"]');
+    aiCell.textContent='O'; aiCell.className='ttt-cell taken o slowblink';
+    beepError();
+    const final=tttCheckWinner(tttBoard);
+    if(final){tttEnd(final);return;}
+    document.getElementById('ttt-status').textContent='> TU TURNO — ERES X';
+  },450);
+}
+function tttEnd(result) {
+  tttOver=true;
+  let title,duckMsg,score;
+  if(result.winner==='draw'){
+    title='EMPATE'; score=1;
+    duckMsg='"Bien jugado. No esperaba menos... bueno, sí lo esperaba."';
+    document.getElementById('ttt-status').textContent='> EMPATE';
+    beepOk();
+    markResult(true,false,'tictactoe');
+  } else if(result.winner==='O'){
+    title='GAME OVER'; score=0;
+    duckMsg='"¿En serio? Soy un pato de GOMA."';
+    document.getElementById('ttt-status').textContent='> GANO EL PATO';
+    beepError();
+    markResult(true,false,'tictactoe');
+    result.line?.forEach(i=>{document.querySelector('.ttt-cell[data-i="'+i+'"]').className='ttt-cell taken win-o';});
+  } else {
+    title='¡IMPOSIBLE!'; score=100;
+    duckMsg='"Eso es... inesperado. Felicidades, supongo."';
+    document.getElementById('ttt-status').textContent='> ¡GANASTE?!';
+    beepWin();
+    markResult(true,true,'tictactoe');
+    result.line?.forEach(i=>{document.querySelector('.ttt-cell[data-i="'+i+'"]').className='ttt-cell taken win-x';});
+  }
+  setTimeout(()=>{
+    showGameOver({ title, score, gameId:'tictactoe', duckMsg, onReplay:tttReset });
+  }, 1400);
+}
+
+// ═════════════════════════════════════════════════════════════════
+// INIT
+// ═════════════════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  switchTo(GAME_IDS[Math.floor(Math.random() * GAME_IDS.length)]);
+});
+</script>
+</body>
+</html>

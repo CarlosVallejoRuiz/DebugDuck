@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const SIZE = 600;
-const dirs = ['idle', 'rasca', 'asiente', 'libreta'];
+const dirs = ['idle', 'rasca', 'asiente', 'libreta', 'gametime'];
 const base = path.join(__dirname, '..', 'src', 'assets', 'animations');
 
 (async () => {
