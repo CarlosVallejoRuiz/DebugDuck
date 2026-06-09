@@ -41,6 +41,37 @@ Hablas. El pato piensa. El pato responde. Si lo abandonas mucho tiempo, se pone 
 - 🖱️ **Click-through pixel-perfect** — el pato no intercepta clicks en áreas transparentes
 - 🔍 **Detección automática de modelo** — detecta qué modelo tienes cargado en LM Studio
 - 📐 **Posición configurable** — grid 3×3 para mover el widget a cualquier esquina
+- 🎮 **Arcade integrado** — 6 minijuegos retro terminal cuando llevas mucho tiempo trabajando
+
+---
+
+## 🕹️ DebugDuck Arcade
+
+Después de un tiempo configurable sin jugar, el pato te sugiere un descanso con una partida. La ventana de juegos es estética retro terminal: fondo negro, verde fosforescente, fuente monospace y efecto scanlines.
+
+| # | Juego | Descripción |
+|---|-------|-------------|
+| 🎯 | **Pato al Agua** (Flappy Duck) | Esquiva obstáculos con gravedad. Velocidad progresiva, puntuación por paso. |
+| 🧠 | **Debug Quiz** | 10 preguntas de JS, Python, Git, algoritmos. 15 s por pregunta. Mensajes sarcásticos del pato. |
+| 🎨 | **Pato Pixel** | Dibuja en un grid 16×16. El modelo local de IA puntúa tu arte con sarcasmo. |
+| ⚡ | **Rubber Duck Typing** | 30 palabras técnicas. Mide WPM y precisión. Banco de 100+ términos. |
+| 🔢 | **Duck Math** | 10 operaciones aritméticas, 8 segundos cada una. Dificultad configurable. |
+| ❌⭕ | **3 en Raya** | IA con minimax perfecto. El pato nunca pierde. Mensajes sarcásticos garantizados. |
+
+### Configuración del Arcade
+
+- **Toggle** en Ajustes ⚙️ → activar/desactivar el sistema completamente
+- **Frecuencia:** `[15m] [25m] [45m] [60m]` — tiempo de trabajo entre sugerencias
+- **Timer visible** en el panel de ajustes con código de colores (verde → amarillo → rojo)
+- **Activación manual** con el botón 🎮 junto al pato en cualquier momento
+
+### Integración Tamagotchi
+
+| Resultado | Happiness |
+|-----------|-----------|
+| Completar cualquier juego | +5 |
+| Ganar en Quiz, Math o Typing | +8 |
+| Perder al pato en 3 en Raya | +3 |
 
 ---
 
@@ -145,6 +176,7 @@ Hover sobre el pato → aparece el engranaje → clic para abrir ajustes:
 - **Modo Tamagotchi** — activa el sistema de estado de ánimo
 - **Slider de crueldad** — solo visible cuando Tamagotchi está desactivado
 - **Memoria** — el pato recuerda hasta 4 mensajes + resumen comprimido
+- **Minijuegos** — toggle ON/OFF + selector de frecuencia `[15m] [25m] [45m] [60m]` + timer de cuenta atrás
 - **Posición** — grid 3×3 para mover el widget
 
 ### 🥚 Modo Tamagotchi
