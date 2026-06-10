@@ -42,9 +42,10 @@ function App() {
   useEffect(() => {
     moveToPosition(lastPosition as Position)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-  const incrementEurekas = useStore((s) => s.incrementEurekas)
-  const gamesEnabled     = useStore((s) => s.gamesEnabled)
-  const gamesInterval    = useStore((s) => s.gamesInterval)
+  const incrementEurekas  = useStore((s) => s.incrementEurekas)
+  const gamesEnabled      = useStore((s) => s.gamesEnabled)
+  const gamesInterval     = useStore((s) => s.gamesInterval)
+  const personalityMode   = useStore((s) => s.personalityMode)
 
   const [gamesTimeLeft,   setGamesTimeLeft]   = useState(gamesInterval * 60)
   const [gamesWindowOpen, setGamesWindowOpen] = useState(false)
@@ -129,13 +130,13 @@ function App() {
 
   const handleGamesOpen = useCallback(async () => {
     try {
-      await invoke('launch_games_window')
+      await invoke('launch_games_window', { personalityMode })
       setGamesWindowOpen(true)
       stopGamesTimer(false)
     } catch (e) {
       console.error(e)
     }
-  }, [stopGamesTimer])
+  }, [stopGamesTimer, personalityMode])
 
   const handleGameSuggestionAccept = useCallback(async () => {
     setShowGameSuggestion(false)

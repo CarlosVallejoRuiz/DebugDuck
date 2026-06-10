@@ -118,6 +118,47 @@ body::before {
 }
 .go-buttons button:hover { background: #00ff00; color: #000; }
 
+/* ── INTRO OVERLAY ───────────────────────────────────────────── */
+#intro-overlay {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 44px;
+  background: #000;
+  z-index: 150;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 16px 8px;
+}
+.intro-box {
+  border: 1px solid #00ff00;
+  padding: 14px 18px;
+  width: 94%;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+}
+.intro-title-line { font-size:13px; font-weight:bold; color:#00ff00; align-self:center; }
+.intro-sep-line   { height:1px; background:#003300; width:100%; }
+.intro-desc       { font-size:11px; color:#00cc00; line-height:1.65; }
+.intro-rules      { display:flex; flex-direction:column; gap:3px; width:100%; }
+.intro-rule       { font-size:11px; color:#00aa00; }
+.intro-no-vision  { font-size:11px; color:#ff4400; line-height:1.7; }
+.intro-btns       { display:flex; flex-direction:column; gap:7px; width:100%; margin-top:2px; }
+.intro-btns button {
+  width:100%; padding:8px;
+  color:#00ff00; background:#000;
+  border:1px solid #00ff00;
+  font-family:'Courier New',monospace;
+  cursor:pointer; font-size:13px; text-align:center;
+}
+.intro-btns button:hover { background:#00ff00; color:#000; }
+.intro-level-btn {
+  width:100%; padding:7px 8px;
+  color:#00ff00; background:#000; border:1px solid #00ff00;
+  font-family:'Courier New',monospace; cursor:pointer; font-size:13px; text-align:center;
+}
+.intro-level-btn:hover { background:#00ff00; color:#000; }
+.intro-level-desc { font-size:10px; color:#005500; padding:2px 4px 4px; }
+
 /* ── SHARED GAME STYLES ─────────────────────────────────────── */
 .game-message {
   font-size:11px; color:#00cc00; text-align:center;
@@ -129,6 +170,12 @@ body::before {
   display:block; margin:0 auto;
   border:1px solid #003300;
   cursor:pointer;
+}
+
+/* ── FROGGER ─────────────────────────────────────────────────── */
+#frogger-canvas {
+  display:block; margin:0 auto;
+  border:1px solid #003300;
 }
 
 /* ── QUIZ ───────────────────────────────────────────────────── */
@@ -229,6 +276,112 @@ body::before {
 .ttt-cell.o      { color:#00aa00; }
 .ttt-cell.win-x  { background:#002200; color:#00ff00; }
 .ttt-cell.win-o  { background:#001100; color:#006600; }
+
+/* ── MEMORY DUCK ─────────────────────────────────────────────── */
+#memory-container { padding:4px 2px; }
+#memory-diff-select { text-align:center; padding:16px 10px; }
+#memory-diff-select p { font-size:13px; margin-bottom:12px; color:#00cc00; }
+#memory-diff-btns { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+#memory-info { font-size:10px; color:#006600; text-align:center; margin-bottom:4px; }
+#memory-grid { display:grid; gap:3px; justify-content:center; margin:0 auto 6px; }
+.mem-card {
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid #004400; background:#000; cursor:pointer;
+  font-size:16px; line-height:1; position:relative;
+}
+.mem-card.flipped { border-color:#00ff00; background:#001100; }
+.mem-card.matched { border-color:#006600; background:#001800; cursor:default; opacity:0.65; }
+.mem-face, .mem-back { position:absolute; }
+.mem-face { display:none; }
+.mem-back { font-size:10px; color:#006600; text-align:center; line-height:1.3; }
+.mem-card.flipped .mem-face,
+.mem-card.matched .mem-face  { display:block; }
+.mem-card.flipped .mem-back,
+.mem-card.matched .mem-back  { display:none; }
+
+/* ── DUCK BEAT ───────────────────────────────────────────────── */
+#duckbeat-container { padding:4px 2px; text-align:center; }
+#duckbeat-status { font-size:12px; color:#00cc00; margin:6px 0 8px; min-height:18px; }
+#duckbeat-round  { font-size:10px; color:#006600; margin-bottom:8px; }
+#duckbeat-buttons { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 20px; margin-bottom:8px; }
+.beat-btn {
+  height:72px; background:#000; border:2px solid #004400;
+  color:#006600; font-family:'Courier New',monospace;
+  font-size:28px; font-weight:bold; cursor:pointer;
+}
+.beat-btn:hover { border-color:#00ff00; color:#00ff00; }
+.beat-btn.lit   { background:#00ff00; color:#000; border-color:#00ff00; }
+#duckbeat-start { text-align:center; padding:20px; }
+
+/* ── SUDOKU DUCK ─────────────────────────────────────────────── */
+#sudoku-container { padding:4px 2px; }
+#sudoku-diff-select { text-align:center; padding:20px 10px; }
+#sudoku-diff-select p { font-size:13px; margin-bottom:12px; color:#00cc00; }
+#sudoku-diff-btns { display:flex; gap:12px; justify-content:center; }
+#sudoku-info { font-size:10px; color:#006600; text-align:center; margin-bottom:4px; }
+#sudoku-grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  border:2px solid #00ff00; width:196px; margin:0 auto 6px;
+}
+.sdk-cell {
+  width:48px; height:48px; border:1px solid #004400; background:#000;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:bold;
+}
+.sdk-cell.preset  { color:#00ff00; cursor:default; }
+.sdk-cell.empty   { color:#00cc00; cursor:pointer; }
+.sdk-cell.empty:hover:not(.selected) { background:#001100; }
+.sdk-cell.selected { background:#002200; border-color:#00ff00; }
+.sdk-cell.wrong   { color:#ff2200; }
+.sdk-cell.solved  { color:#00ff00; }
+#sudoku-grid .sdk-cell:nth-child(4n+2)                        { border-right:2px solid #008800; }
+#sudoku-grid .sdk-cell:nth-child(n+5):nth-child(-n+8)         { border-bottom:2px solid #008800; }
+#sudoku-numpad { display:flex; gap:8px; justify-content:center; margin-bottom:4px; }
+.sdk-num { background:#000; border:1px solid #004400; color:#00ff00; font-family:'Courier New',monospace; font-size:16px; padding:4px 10px; cursor:pointer; }
+.sdk-num:hover { background:#004400; }
+#sudoku-controls { display:flex; gap:8px; justify-content:center; }
+
+/* ── BUG HUNT ────────────────────────────────────────────────── */
+#bughunt-container { padding:4px 2px; }
+#bughunt-info { display:flex; justify-content:space-between; font-size:10px; color:#006600; margin-bottom:4px; }
+#bughunt-timer-bar-wrap { height:5px; background:#002200; border:1px solid #004400; margin-bottom:6px; }
+#bughunt-timer-bar { height:100%; background:#00ff00; }
+#bughunt-code { font-size:11px; line-height:1.7; padding:4px; border:1px solid #003300; overflow:hidden; }
+.bh-line { display:flex; gap:6px; padding:1px 4px; cursor:pointer; }
+.bh-line:hover { background:#001100; }
+.bh-line.hit-ok  { background:#002200; }
+.bh-line.hit-bad { background:#1a0000; }
+.bh-linenum { color:#004400; min-width:14px; text-align:right; user-select:none; }
+.bh-code { white-space:pre; overflow:hidden; text-overflow:ellipsis; }
+#bughunt-feedback { font-size:11px; text-align:center; min-height:18px; margin-top:4px; line-height:1.4; }
+#bughunt-start { text-align:center; padding:20px 10px; }
+
+/* ── DUCK WORDLE ─────────────────────────────────────────────── */
+#wordle-container { padding:2px; }
+#wordle-grid { display:grid; grid-template-rows:repeat(6,1fr); gap:3px; margin:0 auto 4px; }
+.wordle-row { display:grid; gap:3px; }
+.wordle-cell {
+  border:1px solid #004400; background:#000;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-weight:bold;
+}
+.wordle-cell.active  { border-color:#00ff00; }
+.wordle-cell.correct { background:#00ff00; color:#000; border-color:#00ff00; }
+.wordle-cell.present { background:#888800; color:#000; border-color:#888800; }
+.wordle-cell.absent  { background:#222; color:#555; border-color:#333; }
+#wordle-keyboard { display:flex; flex-direction:column; gap:3px; align-items:center; margin-bottom:4px; }
+.wordle-kb-row { display:flex; gap:2px; }
+.wkey {
+  background:#000; border:1px solid #004400; color:#00ff00;
+  font-family:'Courier New',monospace; font-size:9px;
+  padding:4px 3px; cursor:pointer; min-width:22px; text-align:center;
+}
+.wkey:hover { background:#002200; }
+.wkey.correct { background:#00ff00; color:#000; border-color:#00ff00; }
+.wkey.present { background:#888800; color:#000; border-color:#888800; }
+.wkey.absent  { background:#111; color:#333; border-color:#222; }
+.wkey.wide { min-width:34px; font-size:8px; }
+#wordle-msg { font-size:11px; text-align:center; min-height:16px; color:#00cc00; margin-top:2px; }
 </style>
 </head>
 <body>
@@ -239,6 +392,7 @@ body::before {
     <div id="header-title">&gt; DEBUGDUCK ARCADE v1.0 <span class="blink">_</span></div>
     <div id="header-mode">&gt; MODO: <span id="hdr-mode-name">???</span></div>
     <div id="header-score">&gt; SCORE: <span id="hdr-score">0000</span> &nbsp; BEST: <span id="hdr-best">0000</span></div>
+    <div id="header-profile" style="color:#00aa00">&gt; PERFIL: <span id="hdr-profile">???</span></div>
   </div>
 
   <div id="game-area">
@@ -288,7 +442,7 @@ body::before {
       <div id="typing-container">
         <div id="typing-start">
           <p style="font-size:13px;margin-bottom:8px;color:#00cc00">&gt; RUBBER DUCK TYPING</p>
-          <p style="font-size:11px;color:#006600">30 palabras técnicas</p>
+          <p style="font-size:11px;color:#006600" id="typing-desc">30 palabras</p>
           <p style="font-size:11px;color:#006600">Escribe cada palabra + ENTER</p>
           <br>
           <button class="btn" onclick="typingStart()">&gt; [ INICIAR ] &lt;</button>
@@ -331,8 +485,119 @@ body::before {
       </div>
     </div>
 
+    <!-- 7. MEMORY DUCK -->
+    <div id="game-memory" class="game-section">
+      <div id="memory-container">
+        <div id="memory-diff-select">
+          <p>&gt; MEMORY DUCK</p>
+          <p style="font-size:11px;color:#006600;margin-bottom:12px">Encuentra todas las parejas</p>
+          <div id="memory-diff-btns">
+            <button class="btn" onclick="memoryStart(4,4)">[FÁCIL 4x4]</button>
+            <button class="btn" onclick="memoryStart(4,6)">[MEDIO 4x6]</button>
+            <button class="btn" onclick="memoryStart(6,6)">[DIFÍCIL 6x6]</button>
+          </div>
+        </div>
+        <div id="memory-game" style="display:none">
+          <div id="memory-info">&gt; PARES: 0/0 &nbsp; TIEMPO: 00:00</div>
+          <div id="memory-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. DUCK BEAT -->
+    <div id="game-duckbeat" class="game-section">
+      <div id="duckbeat-container">
+        <div id="duckbeat-start">
+          <p style="font-size:13px;margin-bottom:8px;color:#00cc00">&gt; DUCK BEAT</p>
+          <p style="font-size:11px;color:#006600">Repite la secuencia de sonidos</p>
+          <p style="font-size:11px;color:#006600">Teclas A S D F o click</p>
+          <br>
+          <button class="btn" onclick="beatStart()">&gt; [ INICIAR ] &lt;</button>
+        </div>
+        <div id="duckbeat-game" style="display:none">
+          <div id="duckbeat-status">&gt; OBSERVA LA SECUENCIA...</div>
+          <div id="duckbeat-round">&gt; RONDA 1</div>
+          <div id="duckbeat-buttons">
+            <button class="beat-btn" id="beat-A" onclick="beatPress('A')">A</button>
+            <button class="beat-btn" id="beat-S" onclick="beatPress('S')">S</button>
+            <button class="beat-btn" id="beat-D" onclick="beatPress('D')">D</button>
+            <button class="beat-btn" id="beat-F" onclick="beatPress('F')">F</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. SUDOKU DUCK -->
+    <div id="game-sudoku" class="game-section">
+      <div id="sudoku-container">
+        <div id="sudoku-diff-select">
+          <p>&gt; SUDOKU DUCK 4x4</p>
+          <p style="font-size:11px;color:#006600;margin-bottom:12px">Sin repetir en filas, columnas y cuadrantes</p>
+          <div id="sudoku-diff-btns">
+            <button class="btn" onclick="sudokuStart('easy')">[FÁCIL]</button>
+            <button class="btn" onclick="sudokuStart('hard')">[DIFÍCIL]</button>
+          </div>
+        </div>
+        <div id="sudoku-game" style="display:none">
+          <div id="sudoku-info">&gt; ERRORES: 0 &nbsp; TIEMPO: 00:00</div>
+          <div id="sudoku-grid"></div>
+          <div id="sudoku-numpad">
+            <button class="sdk-num" onclick="sudokuInput(1)">[1]</button>
+            <button class="sdk-num" onclick="sudokuInput(2)">[2]</button>
+            <button class="sdk-num" onclick="sudokuInput(3)">[3]</button>
+            <button class="sdk-num" onclick="sudokuInput(4)">[4]</button>
+            <button class="sdk-num" onclick="sudokuInput(0)">[✕]</button>
+          </div>
+          <div id="sudoku-controls">
+            <button class="btn" onclick="sudokuVerify()">[✓ VERIFICAR]</button>
+            <button class="btn" onclick="sudokuReveal()">[RESOLVER]</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. BUG HUNT -->
+    <div id="game-bughunt" class="game-section">
+      <div id="bughunt-container">
+        <div id="bughunt-start">
+          <p style="font-size:13px;margin-bottom:8px;color:#00cc00">&gt; BUG HUNT</p>
+          <p style="font-size:11px;color:#006600" id="bh-desc">Haz click en la línea con el error</p>
+          <p style="font-size:11px;color:#006600">10 rondas — 20 segundos cada una</p>
+          <br>
+          <button class="btn" onclick="bughuntStart()">&gt; [ INICIAR ] &lt;</button>
+        </div>
+        <div id="bughunt-game" style="display:none">
+          <div id="bughunt-info">
+            <span>&gt; RONDA <span id="bh-round">1</span>/10</span>
+            <span>SCORE: <span id="bh-score">0</span></span>
+            <span>TIEMPO: <span id="bh-time">20</span>s</span>
+          </div>
+          <div id="bughunt-timer-bar-wrap"><div id="bughunt-timer-bar" style="width:100%"></div></div>
+          <div id="bughunt-code"></div>
+          <div id="bughunt-feedback"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 11. DUCK WORDLE -->
+    <div id="game-wordle" class="game-section">
+      <div id="wordle-container">
+        <div id="wordle-grid"></div>
+        <div id="wordle-msg"></div>
+        <div id="wordle-keyboard"></div>
+      </div>
+    </div>
+
+    <!-- 12. FROGGER DUCK -->
+    <div id="game-frogger" class="game-section">
+      <canvas id="frogger-canvas" width="380" height="270"></canvas>
+    </div>
+
   </div><!-- /game-area -->
 </div><!-- /app -->
+
+<!-- ── INTRO OVERLAY — content rendered entirely by JS ── -->
+<div id="intro-overlay"></div>
 
 <!-- ── GAME OVER OVERLAY — content rendered entirely by JS ── -->
 <div id="gameover-overlay"></div>
@@ -345,6 +610,17 @@ body::before {
 
 <script>
 'use strict';
+
+// ─────────────────────────────────────────────────────────────────
+// PERSONALITY MODE
+// ─────────────────────────────────────────────────────────────────
+const _params = new URLSearchParams(window.location.search);
+const MODE = _params.get('mode') || 'programmer';
+const isProgrammer = MODE === 'programmer';
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('hdr-profile');
+  if (el) el.textContent = isProgrammer ? 'PROGRAMADOR' : 'GENERAL';
+});
 
 // ─────────────────────────────────────────────────────────────────
 // AUDIO
@@ -395,11 +671,17 @@ async function exitArcade() {
 // SCORE PERSISTENCE (localStorage)
 // ─────────────────────────────────────────────────────────────────
 const SCORE_KEYS = {
-  flappy:    'dd_best_flappy',
-  quiz:      'dd_best_quiz',
-  typing:    'dd_best_typing',
-  math:      'dd_best_math',
-  tictactoe: 'dd_best_tictactoe',
+  flappy:   'dd_best_flappy',
+  quiz:     'dd_best_quiz',
+  typing:   'dd_best_typing',
+  math:     'dd_best_math',
+  tictactoe:'dd_best_tictactoe',
+  memory:   'dd_best_memory',
+  duckbeat: 'dd_best_duckbeat',
+  sudoku:   'dd_best_sudoku',
+  bughunt:  'dd_best_bughunt',
+  wordle:   'dd_best_wordle',
+  frogger:  'dd_best_frogger',
 };
 
 function getBest(game) {
@@ -445,7 +727,7 @@ function goSwitchRandom() {
   switchRandom();
 }
 
-function showGameOver({ title, score, gameId, duckMsg, onReplay }) {
+function showGameOver({ title, score, gameId, duckMsg, onReplay, extraHtml }) {
   _replayCallback = onReplay || null;
 
   const isNew = saveBest(gameId, score);
@@ -462,6 +744,7 @@ function showGameOver({ title, score, gameId, duckMsg, onReplay }) {
       <div>SCORE: ${pad4(score)}</div>
       <div> BEST: ${pad4(best)}</div>
       ${isNew ? '<div class="pulse-rec">&#9733; NUEVO RECORD! &#9733;</div>' : ''}
+      ${extraHtml || ''}
       <div id="go-duck-msg">${duckMsg || ''}</div>
       <div class="go-sep">&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;</div>
       <div class="go-buttons">
@@ -475,20 +758,136 @@ function showGameOver({ title, score, gameId, duckMsg, onReplay }) {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// GAME SWITCHING
+// GAME SWITCHING + VISION CHECK + INTRO SYSTEM
 // ─────────────────────────────────────────────────────────────────
-const GAME_IDS   = ['flappy','quiz','pixel','typing','math','tictactoe'];
+let GAME_IDS = ['flappy','quiz','pixel','typing','math','tictactoe','memory','duckbeat','sudoku','bughunt','wordle','frogger'];
 const GAME_NAMES = {
   flappy:'PATO AL AGUA', quiz:'DEBUG QUIZ', pixel:'PATO PIXEL',
-  typing:'RUBBER DUCK TYPING', math:'DUCK MATH', tictactoe:'3 EN RAYA'
+  typing:'RUBBER DUCK TYPING', math:'DUCK MATH', tictactoe:'3 EN RAYA',
+  memory:'MEMORY DUCK', duckbeat:'DUCK BEAT', sudoku:'SUDOKU DUCK',
+  bughunt:'BUG HUNT', wordle:'DUCK WORDLE', frogger:'FROGGER DUCK'
 };
-const GAME_STOPS  = { flappy:flappyStop, quiz:quizStop, pixel:pixelStop, typing:typingStop, math:mathStop, tictactoe:()=>{} };
-const GAME_STARTS = { flappy:flappyInit, quiz:quizStart, pixel:pixelInit, typing:typingInit, math:mathInit, tictactoe:tttInit };
+// GAME_STOPS: called when leaving a game (cleanup/timers)
+const GAME_STOPS  = { flappy:flappyStop, quiz:quizStop, pixel:pixelStop, typing:typingStop, math:mathStop, tictactoe:()=>{}, memory:memoryStop, duckbeat:beatStop, sudoku:sudokuStop, bughunt:bughuntStop, wordle:wordleStop, frogger:froggerStop };
+// GAME_STARTS: called to reset game UI to initial state before intro shows
+const GAME_STARTS = { flappy:flappyInit, quiz:quizStart, pixel:pixelInit, typing:typingInit, math:mathInit, tictactoe:tttInit, memory:memoryInit, duckbeat:beatInit, sudoku:sudokuInit, bughunt:bughuntInit, wordle:wordleInit, frogger:froggerInit };
+// GAME_PLAYS: called when user clicks EMPEZAR — starts gameplay directly
+const GAME_PLAYS  = { flappy:flappyInit, quiz:quizStart, pixel:pixelInit, typing:typingStart, math:mathInit, tictactoe:tttInit, memory:memoryInit, duckbeat:beatStart, sudoku:sudokuInit, bughunt:bughuntStart, wordle:wordleInit, frogger:froggerInit };
 
 let currentGame = null;
+let supportsVision = false;
+
+async function checkVisionSupport() {
+  try {
+    const resp = await fetch('http://localhost:1234/v1/models');
+    const data = await resp.json();
+    const mid = (data.data?.[0]?.id || '').toLowerCase();
+    return ['llava','vision','bakllava','moondream','minicpm-v','qwen-vl','internvl','cogvlm','phi-3-vision'].some(v => mid.includes(v));
+  } catch { return false; }
+}
+
+function getIntroData(id) {
+  const p = isProgrammer;
+  const D = {
+    flappy:    { desc:'Mantén al pato en el aire esquivando obstáculos.\nCada obstáculo superado suma puntos.\nLa velocidad aumenta con el tiempo.', rules:['&#9251; Click o SPACE para volar','&#128128; Un toque y game over','&#127942; Supera tu mejor marca'] },
+    quiz:      { desc: p ? 'Demuestra cuánto sabes de programación.' : 'Pon a prueba tu cultura general.', rules:['&#9201; 15 segundos por pregunta','&#127919; 4 opciones, solo 1 correcta','&#128202; 10 preguntas por ronda'] },
+    pixel:     { desc:'Dibuja el tema propuesto en el grid de 16&#215;16.\nLa IA local valorará tu obra maestra.', rules:['&#127912; 60 segundos para dibujar','&#129302; Puntuación por IA local','&#128520; El pato no tiene piedad artística'] },
+    typing:    { desc: p ? 'Escribe términos técnicos lo más rápido posible.' : 'Escribe palabras lo más rápido posible.', rules:['&#9889; 30 palabras por ronda','&#128200; Se mide WPM y precisión','&#9000; Escribe y pulsa Enter'] },
+    math:      { desc:'Resuelve operaciones mentales contra el reloj.\nSin papel, sin calculadora, solo tu mente.', rules:['&#9201; 8 segundos por operación','&#128290; 10 operaciones por ronda','&#128200; Puntos extra por velocidad'] },
+    tictactoe: { desc:'Juega al tres en raya contra el pato.\nEl pato usa IA perfecta (minimax).', rules:['&#10060; Tú eres las X, el pato las O','&#129504; El pato nunca comete errores','&#129309; El empate es el mejor resultado posible'] },
+    memory:    { desc:'Encuentra todas las parejas de cartas.', rules:['&#127183; Elige dificultad: 4&#215;4, 4&#215;6 o 6&#215;6','&#129504; Recuerda dónde está cada carta','&#9201; Cuanto más rápido, más puntos'] },
+    duckbeat:  { desc:'Repite la secuencia de sonidos que escuches.', rules:['&#127925; Escucha la secuencia completa','&#127929; Repítela en orden: A S D F','&#128200; Cada ronda añade una nota más'] },
+    sudoku:    { desc:'Completa el grid 4&#215;4 sin repetir números.', rules:['&#128290; Números del 1 al 4','&#8596; Sin repetir en filas, columnas ni cuadrantes','&#10003; Pulsa VERIFICAR cuando acabes'] },
+    bughunt:   { desc: p ? 'Encuentra el bug en cada fragmento de código.' : 'Encuentra el error lógico en cada situación.', rules:['&#128070; Haz click en la línea con el error','&#9201; 20 segundos por ronda','&#128269; 10 rondas en total'] },
+    wordle:    { desc: p ? 'Adivina el término técnico en 6 intentos.\nLa palabra tiene 4, 5 o 6 letras.' : 'Adivina la palabra en 6 intentos.\nLa palabra tiene 4, 5 o 6 letras.', rules:['&#129001; Verde: letra correcta en posición correcta','&#129000; Amarillo: letra en otra posición','&#11035; Gris: letra no existe en la palabra'] },
+    frogger:   { desc:'Los coches bajan hacia ti. Muévete a izquierda o derecha para esquivarlos.\nCada carril esquivado suma 100 puntos. La velocidad aumenta cada 5 carriles.', rules:['&#8592; &#8594; o A/D para esquivar','&#9829;&#9829;&#9829; 3 vidas — un toque las quita','Velocidad aumenta cada 5 carriles'] },
+  };
+  return D[id] || { desc:'...', rules:[] };
+}
+
+function showIntro(id) {
+  const overlay = document.getElementById('intro-overlay');
+  if (id === 'pixel' && !supportsVision) {
+    overlay.innerHTML = `<div class="intro-box">
+      <div class="intro-title-line">&gt; ${GAME_NAMES[id]} <span class="blink">_</span></div>
+      <div class="intro-sep-line"></div>
+      <div class="intro-no-vision">Tu modelo local no soporta visión.<br>Cambia a un modelo con capacidad de imagen<br>en LM Studio para usar este juego.</div>
+      <div class="intro-sep-line"></div>
+      <div class="intro-btns">
+        <button onclick="introSwitchRandom()">[ &#x1F500; OTRO JUEGO ]</button>
+        <button onclick="exitArcade()">[ &#x2715; CERRAR ]</button>
+      </div></div>`;
+    overlay.style.display = 'flex';
+    return;
+  }
+  if (id === 'math') {
+    const dm = getIntroData('math');
+    const descHtmlM = dm.desc.split('\n').map(l => `<div>${l}</div>`).join('');
+    const rulesHtmlM = dm.rules.map(r => `<div class="intro-rule">&gt; ${r}</div>`).join('');
+    overlay.innerHTML = `<div class="intro-box">
+      <div class="intro-title-line">&gt; DUCK MATH <span class="blink">_</span></div>
+      <div class="intro-sep-line"></div>
+      <div class="intro-desc">${descHtmlM}</div>
+      <div class="intro-sep-line"></div>
+      <div class="intro-rules">${rulesHtmlM}</div>
+      <div class="intro-sep-line"></div>
+      <div style="font-size:11px;color:#00ff00;margin-bottom:6px">&gt; ELIGE TU NIVEL:</div>
+      <div style="display:flex;flex-direction:column;gap:6px;width:100%">
+        <div>
+          <button class="intro-level-btn" onclick="introPlayMath('easy')">[ FÁCIL ]</button>
+          <div class="intro-level-desc">Sumas y restas hasta el 20</div>
+        </div>
+        <div>
+          <button class="intro-level-btn" onclick="introPlayMath('medium')">[ MEDIO ]</button>
+          <div class="intro-level-desc">Multiplicación, tablas 1-12</div>
+        </div>
+        <div>
+          <button class="intro-level-btn" onclick="introPlayMath('hard')">[ DIFÍCIL ]</button>
+          <div class="intro-level-desc">División exacta y potencias</div>
+        </div>
+      </div>
+      <div class="intro-sep-line"></div>
+      <div class="intro-btns" style="margin-top:0">
+        <button onclick="introSwitchRandom()">[ &#x1F500; OTRO JUEGO ]</button>
+      </div></div>`;
+    overlay.style.display = 'flex';
+    return;
+  }
+  const d = getIntroData(id);
+  const descHtml = d.desc.split('\n').map(l => `<div>${l}</div>`).join('');
+  const rulesHtml = d.rules.map(r => `<div class="intro-rule">&gt; ${r}</div>`).join('');
+  overlay.innerHTML = `<div class="intro-box">
+    <div class="intro-title-line">&gt; ${GAME_NAMES[id]} <span class="blink">_</span></div>
+    <div class="intro-sep-line"></div>
+    <div class="intro-desc">${descHtml}</div>
+    <div class="intro-sep-line"></div>
+    <div class="intro-rules">${rulesHtml}</div>
+    <div class="intro-sep-line"></div>
+    <div class="intro-btns">
+      <button onclick="introPlay('${id}')">[ &#9654; EMPEZAR ]</button>
+      <button onclick="introSwitchRandom()">[ &#x1F500; OTRO JUEGO ]</button>
+    </div></div>`;
+  overlay.style.display = 'flex';
+}
+
+function introPlay(id) {
+  document.getElementById('intro-overlay').style.display = 'none';
+  if (GAME_PLAYS[id]) GAME_PLAYS[id]();
+}
+
+function introSwitchRandom() {
+  document.getElementById('intro-overlay').style.display = 'none';
+  switchRandom();
+}
+
+function introPlayMath(level) {
+  document.getElementById('intro-overlay').style.display = 'none';
+  mathStart(level);
+}
 
 function switchTo(id) {
   document.getElementById('gameover-overlay').style.display = 'none';
+  document.getElementById('intro-overlay').style.display = 'none';
   if (currentGame) {
     GAME_STOPS[currentGame]?.();
     document.getElementById('game-' + currentGame).classList.remove('active');
@@ -498,6 +897,7 @@ function switchTo(id) {
   const best = SCORE_KEYS[id] ? getBest(id) : 0;
   setHeader(GAME_NAMES[id], 0, best);
   GAME_STARTS[id]?.();
+  showIntro(id);
 }
 
 function switchRandom() {
@@ -694,13 +1094,42 @@ const QUIZ_BANK = [
   {q:"¿Qué es memoización?",                             c:"Caché de resultados para evitar recálculos",        w:["Una técnica de compresión","Un tipo de herencia","Un patrón de base de datos"]},
 ];
 
+const GENERAL_QUIZ_BANK = [
+  {q:"¿Cuántos planetas tiene el sistema solar?",           c:"8",                                                 w:["9","7","10"]},
+  {q:"¿Qué país tiene más territorio en el mundo?",         c:"Rusia",                                             w:["Canadá","China","Estados Unidos"]},
+  {q:"¿Cuántos huesos tiene el cuerpo humano adulto?",      c:"206",                                               w:["208","198","212"]},
+  {q:"¿En qué año llegó el hombre a la Luna?",              c:"1969",                                               w:["1967","1971","1965"]},
+  {q:"¿Cuál es el elemento más abundante en el universo?",  c:"Hidrógeno",                                         w:["Helio","Oxígeno","Carbono"]},
+  {q:"¿Cuántos continentes hay en la Tierra?",              c:"7",                                                 w:["5","6","8"]},
+  {q:"¿Cuál es el animal más rápido del mundo?",            c:"Guepardo",                                          w:["Halcón peregrino","León","Águila"]},
+  {q:"¿Qué gas exhalan las plantas en fotosíntesis?",       c:"Oxígeno",                                           w:["Dióxido de carbono","Nitrógeno","Hidrógeno"]},
+  {q:"¿Cuántos lados tiene un hexágono?",                   c:"6",                                                 w:["5","7","8"]},
+  {q:"¿Quién escribió Don Quijote de la Mancha?",           c:"Miguel de Cervantes",                               w:["Lope de Vega","Francisco de Quevedo","García Lorca"]},
+  {q:"¿Cuál es el océano más grande del mundo?",            c:"Pacífico",                                          w:["Atlántico","Índico","Ártico"]},
+  {q:"¿Cuántos cromosomas tiene una célula humana normal?", c:"46",                                                w:["23","48","44"]},
+  {q:"¿Qué significa ADN?",                                 c:"Ácido desoxirribonucleico",                         w:["Ácido dinucleico nitrogenado","Adenina desóxida nucleada","Adenosín dinucleótido"]},
+  {q:"¿Cuál es la capital de Australia?",                   c:"Canberra",                                          w:["Sídney","Melbourne","Brisbane"]},
+  {q:"¿A qué velocidad viaja la luz en el vacío (aprox)?",  c:"300.000 km/s",                                      w:["150.000 km/s","500.000 km/s","100.000 km/s"]},
+  {q:"¿Cuántos colores tiene el arcoíris?",                 c:"7",                                                 w:["6","8","5"]},
+  {q:"¿Qué planeta es conocido como el planeta rojo?",      c:"Marte",                                             w:["Júpiter","Saturno","Venus"]},
+  {q:"¿Qué órgano bombea la sangre en el cuerpo humano?",   c:"Corazón",                                           w:["Pulmón","Riñón","Hígado"]},
+  {q:"¿Cuánto tarda la Tierra en dar una vuelta al Sol?",   c:"365 días aproximadamente",                          w:["360 días","400 días","300 días"]},
+  {q:"¿Cuál es el río más largo del mundo?",                c:"Nilo",                                              w:["Amazonas","Yangtsé","Misisipi"]},
+  {q:"¿En qué continente está Egipto?",                     c:"África",                                            w:["Asia","Europa","Oriente Medio"]},
+  {q:"¿Cuántos jugadores hay en un equipo de fútbol?",      c:"11",                                                w:["10","12","9"]},
+  {q:"¿Qué instrumento mide la temperatura?",               c:"Termómetro",                                        w:["Barómetro","Higrómetro","Anemómetro"]},
+  {q:"¿Cuál es el metal más ligero?",                       c:"Litio",                                             w:["Aluminio","Magnesio","Sodio"]},
+  {q:"¿Cuántas notas tiene la escala musical?",             c:"7",                                                 w:["5","8","12"]},
+];
+
 let quizQuestions=[], quizIdx=0, quizScore=0, quizTimer=null, quizAnswered=false;
 
 function quizStop() { clearInterval(quizTimer); }
 
 function quizStart() {
   clearInterval(quizTimer);
-  quizQuestions = [...QUIZ_BANK].sort(()=>Math.random()-0.5).slice(0,10);
+  const bank = isProgrammer ? QUIZ_BANK : GENERAL_QUIZ_BANK;
+  quizQuestions = [...bank].sort(()=>Math.random()-0.5).slice(0,10);
   quizIdx = 0; quizScore = 0;
   updateScore(0);
   // Reset all quiz UI
@@ -955,11 +1384,36 @@ const TYPING_WORDS=[
   'socket','buffer','stream','pipeline','queue','stack','heap'
 ];
 
+const GENERAL_TYPING_WORDS=[
+  'murcielago','efervescente','comunicacion','tecnologia','democracia',
+  'telefono','computadora','universidad','presidente','futbolista',
+  'biblioteca','arquitectura','fotografia','periodismo','economia',
+  'matematicas','geografia','biologia','quimica','historia',
+  'naturaleza','atmosfera','ecosistema','evolucion','especie',
+  'continente','peninsula','oceano','montaña','desierto',
+  'volcanes','tornado','terremoto','huracan','tsunami',
+  'medicina','hospital','paciente','tratamiento','vacuna',
+  'vitamina','proteina','carbohidrato','metabolismo','celula',
+  'musculo','esqueleto','cerebro','corazon','pulmon',
+  'restaurant','aeropuerto','supermercado','biblioteca','estadio',
+  'avenida','autopista','semaforo','rotonda','carretera',
+  'primavera','verano','otono','invierno','temperatura',
+  'lluvia','nieve','viento','tormenta','humedad',
+  'filosofia','psicologia','sociologia','antropologia','linguistica',
+  'literatura','poesia','novela','cuento','ensayo',
+  'pintura','escultura','musica','danza','teatro',
+  'gobierno','parlamento','constitucion','legislacion','tribunal',
+  'comercio','industria','agricultura','turismo','finanzas',
+  'globalizacion','sostenibilidad','medioambiente','reciclaje','energia'
+];
+
 let typingWords=[],typingIdx=0,typingErrors=0,typingStartTime=0,typingActive=false;
 
 function typingInit() {
   document.getElementById('typing-start').style.display='block';
   document.getElementById('typing-game').style.display='none';
+  const desc = document.getElementById('typing-desc');
+  if (desc) desc.textContent = isProgrammer ? '30 palabras técnicas' : '30 palabras en español';
 }
 function typingStop() {
   typingActive=false;
@@ -967,7 +1421,8 @@ function typingStop() {
   if(inp) inp.removeEventListener('keydown',typingKey);
 }
 function typingStart() {
-  typingWords=[...TYPING_WORDS].sort(()=>Math.random()-0.5).slice(0,30);
+  const tBank = isProgrammer ? TYPING_WORDS : GENERAL_TYPING_WORDS;
+  typingWords=[...tBank].sort(()=>Math.random()-0.5).slice(0,30);
   typingIdx=0; typingErrors=0; typingActive=true; typingStartTime=Date.now();
   document.getElementById('typing-start').style.display='none';
   document.getElementById('typing-game').style.display='block';
@@ -1205,9 +1660,878 @@ function tttEnd(result) {
 }
 
 // ═════════════════════════════════════════════════════════════════
+// GAME 7 ── MEMORY DUCK
+// ═════════════════════════════════════════════════════════════════
+const MEM_EMOJIS = ['💻','🐛','⚡','🦆','🔧','📦','🚀','🎯','🔍','🎮','🧩','💾','🖥️','🔒','🌐','🔑','🎲','⚙️'];
+let memCols=4, memRows=4, memCards=[], memFlipped=[], memMatched=0, memTotal=0;
+let memTimer=null, memSecs=0, memLocked=false;
+
+function memoryInit() {
+  document.getElementById('memory-diff-select').style.display = 'block';
+  document.getElementById('memory-game').style.display = 'none';
+}
+
+function memoryStop() { clearInterval(memTimer); }
+
+function memoryStart(cols, rows) {
+  memCols = cols; memRows = rows; memMatched = 0; memSecs = 0; memLocked = false;
+  const pairs = (cols * rows) / 2;
+  const emojis = MEM_EMOJIS.slice(0, pairs);
+  const deck = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+  memCards = deck.map((e, i) => ({ emoji: e, flipped: false, matched: false, id: i }));
+  memFlipped = []; memTotal = pairs;
+
+  document.getElementById('memory-diff-select').style.display = 'none';
+  document.getElementById('memory-game').style.display = 'block';
+
+  const cardSize = cols === 6 ? 52 : rows === 6 ? 58 : 78;
+  const gap = 3;
+  const grid = document.getElementById('memory-grid');
+  grid.style.gridTemplateColumns = `repeat(${cols}, ${cardSize}px)`;
+  grid.style.gap = gap + 'px';
+  grid.innerHTML = '';
+  deck.forEach((emoji, i) => {
+    const card = document.createElement('div');
+    card.className = 'mem-card';
+    card.style.width = cardSize + 'px';
+    card.style.height = cardSize + 'px';
+    card.dataset.i = i;
+    card.innerHTML = `<span class="mem-back" style="font-size:${Math.floor(cardSize*0.22)}px">?</span><span class="mem-face" style="font-size:${Math.floor(cardSize*0.45)}px">${emoji}</span>`;
+    card.addEventListener('click', () => memFlip(i));
+    grid.appendChild(card);
+  });
+
+  clearInterval(memTimer);
+  memTimer = setInterval(() => { memSecs++; memUpdateInfo(); }, 1000);
+  memUpdateInfo(); updateScore(0);
+}
+
+function memUpdateInfo() {
+  const mm = String(Math.floor(memSecs / 60)).padStart(2,'0');
+  const ss = String(memSecs % 60).padStart(2,'0');
+  document.getElementById('memory-info').textContent = `> PARES: ${memMatched}/${memTotal}   TIEMPO: ${mm}:${ss}`;
+}
+
+function memFlip(i) {
+  if (memLocked || memCards[i].flipped || memCards[i].matched || memFlipped.length >= 2) return;
+  memCards[i].flipped = true;
+  memFlipped.push(i);
+  document.querySelector(`.mem-card[data-i="${i}"]`).classList.add('flipped');
+  beepClick();
+
+  if (memFlipped.length === 2) {
+    const [a, b] = memFlipped;
+    if (memCards[a].emoji === memCards[b].emoji) {
+      memCards[a].matched = memCards[b].matched = true;
+      document.querySelector(`.mem-card[data-i="${a}"]`).classList.add('matched');
+      document.querySelector(`.mem-card[data-i="${b}"]`).classList.add('matched');
+      memMatched++; memFlipped = []; beepOk(); updateScore(memMatched); memUpdateInfo();
+      if (memMatched === memTotal) { clearInterval(memTimer); memFinish(); }
+    } else {
+      memLocked = true;
+      setTimeout(() => {
+        [a, b].forEach(idx => {
+          memCards[idx].flipped = false;
+          document.querySelector(`.mem-card[data-i="${idx}"]`).classList.remove('flipped');
+        });
+        memFlipped = []; memLocked = false; beepError();
+      }, 900);
+    }
+  }
+}
+
+function memFinish() {
+  const diffBonus = memCols === 6 ? 400 : memRows === 6 ? 200 : 0;
+  const score = Math.max(50, 1000 - memSecs * 8) + diffBonus;
+  markResult(true, true, 'memory');
+  let duckMsg;
+  if (memCols === 6)           duckMsg = '"6x6 completado. Casi me sorprendes."';
+  else if (memRows === 6)      duckMsg = '"Memoria decente. Para variar."';
+  else if (memSecs < 30)       duckMsg = '"4x4 en ese tiempo. Impresionante para humano."';
+  else                         duckMsg = '"Memoria de pez. Pero lo conseguiste."';
+  beepWin();
+  showGameOver({ title:'COMPLETADO', score, gameId:'memory', duckMsg, onReplay:memoryInit });
+}
+
+// ═════════════════════════════════════════════════════════════════
+// GAME 8 ── DUCK BEAT
+// ═════════════════════════════════════════════════════════════════
+const BEAT_KEYS  = ['A','S','D','F'];
+const BEAT_FREQS = { A:261, S:329, D:392, F:523 };
+let beatSeq=[], beatPlayerIdx=0, beatRound=0, beatPlaying=false, beatActive=false;
+
+function beatInit() {
+  document.getElementById('duckbeat-start').style.display = 'block';
+  document.getElementById('duckbeat-game').style.display = 'none';
+}
+
+function beatStop() {
+  beatActive = false; beatPlaying = false;
+  document.removeEventListener('keydown', beatKeyHandler);
+}
+
+function beatKeyHandler(e) {
+  if (currentGame !== 'duckbeat' || !beatActive || beatPlaying) return;
+  const k = e.key.toUpperCase();
+  if (BEAT_KEYS.includes(k)) { e.preventDefault(); beatPress(k); }
+}
+
+function beatLit(k, on) {
+  const btn = document.getElementById('beat-' + k);
+  if (btn) btn.classList.toggle('lit', on);
+}
+
+function beatPlayNote(k) {
+  beep(BEAT_FREQS[k], 0.28, 0.14);
+  beatLit(k, true);
+  return new Promise(r => setTimeout(() => { beatLit(k, false); r(); }, 380));
+}
+
+async function beatPlaySeq() {
+  beatPlaying = true;
+  document.getElementById('duckbeat-status').textContent = '> OBSERVA LA SECUENCIA...';
+  await new Promise(r => setTimeout(r, 500));
+  for (const k of beatSeq) {
+    if (!beatActive) return;
+    await beatPlayNote(k);
+    await new Promise(r => setTimeout(r, 130));
+  }
+  beatPlaying = false;
+  beatPlayerIdx = 0;
+  document.getElementById('duckbeat-status').textContent = '> TU TURNO — REPITE';
+}
+
+async function beatNextRound() {
+  if (!beatActive) return;
+  beatRound++;
+  beatSeq.push(BEAT_KEYS[Math.floor(Math.random() * 4)]);
+  document.getElementById('duckbeat-round').textContent = `> RONDA ${beatRound} — LONGITUD: ${beatSeq.length}`;
+  updateScore(beatRound - 1);
+  await beatPlaySeq();
+}
+
+async function beatStart() {
+  beatSeq = []; beatRound = 0; beatActive = true; beatPlaying = false;
+  document.getElementById('duckbeat-start').style.display = 'none';
+  document.getElementById('duckbeat-game').style.display = 'block';
+  document.removeEventListener('keydown', beatKeyHandler);
+  document.addEventListener('keydown', beatKeyHandler);
+  updateScore(0);
+  await beatNextRound();
+}
+
+function beatPress(k) {
+  if (!beatActive || beatPlaying) return;
+  beatPlayNote(k);
+  if (k === beatSeq[beatPlayerIdx]) {
+    beatPlayerIdx++;
+    if (beatPlayerIdx === beatSeq.length) {
+      beepOk(); updateScore(beatRound);
+      setTimeout(() => beatNextRound(), 700);
+    }
+  } else {
+    beatActive = false; beepError();
+    document.getElementById('duckbeat-status').textContent = '> ERROR — GAME OVER';
+    const score = Math.max(0, beatRound - 1);
+    markResult(score >= 5, score >= 10, 'duckbeat');
+    let duckMsg;
+    if (score < 5)       duckMsg = '"¿Seguro que tienes oídos?"';
+    else if (score < 10) duckMsg = '"Ritmo básico. Suficiente."';
+    else                 duckMsg = '"Oído fino. No lo esperaba... bueno, sí."';
+    setTimeout(() => showGameOver({ title:'GAME OVER', score, gameId:'duckbeat', duckMsg, onReplay:beatStart }), 900);
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════
+// GAME 9 ── SUDOKU DUCK
+// ═════════════════════════════════════════════════════════════════
+let sdkSolution=[], sdkBoard=[], sdkPreset=[], sdkSelected=-1;
+let sdkTimer=null, sdkSecs=0, sdkErrors=0, sdkRevealed=false, sdkDone=false;
+
+function sudokuInit() {
+  document.getElementById('sudoku-diff-select').style.display = 'block';
+  document.getElementById('sudoku-game').style.display = 'none';
+}
+
+function sudokuStop() {
+  clearInterval(sdkTimer);
+  document.removeEventListener('keydown', sdkKeyHandler);
+}
+
+function sdkGenBoard() {
+  const b = Array(16).fill(0);
+  function ok(idx, n) {
+    const r = Math.floor(idx / 4), c = idx % 4;
+    for (let j = 0; j < 4; j++) if (b[r*4+j] === n || b[j*4+c] === n) return false;
+    const br = Math.floor(r/2)*2, bc = Math.floor(c/2)*2;
+    for (let dr = 0; dr < 2; dr++) for (let dc = 0; dc < 2; dc++) if (b[(br+dr)*4+(bc+dc)] === n) return false;
+    return true;
+  }
+  function solve(idx) {
+    if (idx === 16) return true;
+    const nums = [1,2,3,4].sort(() => Math.random() - 0.5);
+    for (const n of nums) { if (ok(idx, n)) { b[idx] = n; if (solve(idx+1)) return true; b[idx] = 0; } }
+    return false;
+  }
+  solve(0); return b;
+}
+
+function sdkKeyHandler(e) {
+  if (currentGame !== 'sudoku' || sdkDone) return;
+  if (e.key >= '1' && e.key <= '4') sudokuInput(parseInt(e.key));
+  if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') sudokuInput(0);
+}
+
+function sudokuStart(diff) {
+  sdkSolution = sdkGenBoard(); sdkBoard = [...sdkSolution];
+  sdkErrors = 0; sdkSecs = 0; sdkSelected = -1; sdkRevealed = false; sdkDone = false;
+  const remove = diff === 'easy' ? 6 : 10;
+  const indices = [...Array(16).keys()].sort(() => Math.random() - 0.5).slice(0, remove);
+  sdkPreset = Array(16).fill(true);
+  indices.forEach(i => { sdkBoard[i] = 0; sdkPreset[i] = false; });
+
+  document.getElementById('sudoku-diff-select').style.display = 'none';
+  document.getElementById('sudoku-game').style.display = 'block';
+
+  const grid = document.getElementById('sudoku-grid');
+  grid.innerHTML = '';
+  sdkBoard.forEach((val, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'sdk-cell ' + (sdkPreset[i] ? 'preset' : 'empty');
+    cell.dataset.i = i;
+    cell.textContent = val || '';
+    if (!sdkPreset[i]) cell.addEventListener('click', () => sdkSelect(i));
+    grid.appendChild(cell);
+  });
+
+  document.removeEventListener('keydown', sdkKeyHandler);
+  document.addEventListener('keydown', sdkKeyHandler);
+  clearInterval(sdkTimer);
+  sdkTimer = setInterval(() => { sdkSecs++; sdkUpdateInfo(); }, 1000);
+  sdkUpdateInfo(); updateScore(0);
+}
+
+function sdkSelect(i) {
+  if (sdkPreset[i] || sdkDone) return;
+  sdkSelected = i;
+  document.querySelectorAll('.sdk-cell').forEach((c, idx) => {
+    if (!sdkPreset[idx] && !c.classList.contains('solved')) {
+      c.classList.toggle('selected', idx === i);
+    }
+  });
+}
+
+function sudokuInput(n) {
+  if (sdkSelected < 0 || sdkPreset[sdkSelected] || sdkDone) return;
+  sdkBoard[sdkSelected] = n;
+  const cell = document.querySelector(`.sdk-cell[data-i="${sdkSelected}"]`);
+  cell.textContent = n || '';
+  cell.className = 'sdk-cell empty selected';
+  beepClick();
+}
+
+function sdkUpdateInfo() {
+  const mm = String(Math.floor(sdkSecs/60)).padStart(2,'0');
+  const ss = String(sdkSecs%60).padStart(2,'0');
+  document.getElementById('sudoku-info').textContent = `> ERRORES: ${sdkErrors}   TIEMPO: ${mm}:${ss}`;
+}
+
+function sudokuVerify() {
+  if (sdkDone) return;
+  let wrong = 0;
+  document.querySelectorAll('.sdk-cell').forEach((cell, i) => {
+    if (sdkPreset[i] || !sdkBoard[i]) return;
+    if (sdkBoard[i] !== sdkSolution[i]) { cell.className = 'sdk-cell empty wrong'; wrong++; }
+    else { cell.className = 'sdk-cell preset solved'; }
+  });
+  if (wrong > 0) { sdkErrors += wrong; sdkUpdateInfo(); beepError(); return; }
+  if (sdkBoard.every((v, i) => v === sdkSolution[i])) {
+    clearInterval(sdkTimer); sdkDone = true; beepWin();
+    const score = Math.max(0, 1000 - sdkErrors * 100 - sdkSecs * 2);
+    markResult(true, sdkErrors === 0, 'sudoku');
+    let duckMsg = sdkErrors === 0 ? '"Lógica pura. Respetable."' : `"${sdkErrors} errores. La lógica no es lo tuyo."`;
+    showGameOver({ title:'RESUELTO', score, gameId:'sudoku', duckMsg, onReplay:sudokuInit });
+  } else {
+    beepOk();
+  }
+}
+
+function sudokuReveal() {
+  if (sdkDone) return;
+  sdkRevealed = true; sdkDone = true; clearInterval(sdkTimer);
+  sdkSolution.forEach((val, i) => {
+    sdkBoard[i] = val;
+    const cell = document.querySelector(`.sdk-cell[data-i="${i}"]`);
+    cell.textContent = val;
+    if (!sdkPreset[i]) cell.className = 'sdk-cell preset solved';
+  });
+  beepError();
+  setTimeout(() => showGameOver({ title:'TRAMPA DETECTADA', score:0, gameId:'sudoku', duckMsg:'"Trampa detectada. El pato lo sabe."', onReplay:sudokuInit }), 1000);
+}
+
+// ═════════════════════════════════════════════════════════════════
+// GAME 10 ── BUG HUNT
+// ═════════════════════════════════════════════════════════════════
+const BH_BUGS = [
+  { lines:['function suma(a, b) {','  return a - b;','}'],                                          bug:1, hint:'Resta en vez de suma' },
+  { lines:['for (let i=0; i<=arr.length; i++) {','  console.log(arr[i]);','}'],                    bug:0, hint:'<= causa índice fuera de rango' },
+  { lines:['if (x = 5) {','  console.log("cinco");','}'],                                          bug:0, hint:'= asigna, no compara' },
+  { lines:['async function load() {','  const data = getData();','  return data;','}'],            bug:1, hint:'Falta await antes de getData()' },
+  { lines:['setTimeout(fn(), 1000);'],                                                              bug:0, hint:'fn() ejecuta ya, debe ser fn' },
+  { lines:['const arr = [3,1,2];','arr.sort();','console.log(arr[0]); // 1?'],                    bug:1, hint:'sort() sin comparador ordena como string' },
+  { lines:['"5" + 3 === 8'],                                                                        bug:0, hint:'"5"+3="53", coerción de tipos' },
+  { lines:['null.toString()'],                                                                      bug:0, hint:'null no tiene métodos — TypeError' },
+  { lines:['const arr = [1,2,3];','arr = arr.reverse();'],                                         bug:1, hint:'reverse() muta el original' },
+  { lines:['let i = 0;','while (i < 10) {','  i = i - 1;','}'],                                   bug:2, hint:'Decremento → bucle infinito' },
+  { lines:['def suma(a, b):','  return a + b','suma(1, 2, 3)'],                                    bug:2, hint:'Demasiados argumentos' },
+  { lines:['list = [1, 2, 3]','print(list)'],                                                      bug:0, hint:'list sobreescribe el builtin' },
+  { lines:['for i in range(1, 10):','  print(i)  # ¿llega al 10?'],                               bug:0, hint:'range(1,10) va del 1 al 9' },
+  { lines:['if x == None:','  print("vacío")'],                                                    bug:0, hint:'Debe ser "is None", no ==' },
+  { lines:['arr = [0,1,2,3,4]','print(arr[5])'],                                                   bug:1, hint:'Índice 5 fuera de rango (0-4)' },
+  { lines:['function greet(name) {','  return','    { msg: "Hola " + name };','}'],                bug:1, hint:'ASI inserta ; tras return' },
+  { lines:['const obj = {a:1};','const copy = obj;','copy.a = 99;','// obj.a ahora es 99'],        bug:1, hint:'Copia referencia, no valor' },
+  { lines:['async function run() {','  fetch("/api/data");','  doSomething();','}'],               bug:1, hint:'Falta await — fetch no se espera' },
+  { lines:['let x = 0.1 + 0.2;','if (x === 0.3) console.log("OK");'],                            bug:1, hint:'0.1+0.2 ≠ 0.3 — precisión flotante' },
+  { lines:['const p = new Promise(r => r(42));','console.log(p); // 42?'],                        bug:1, hint:'Promise no se resuelve síncronamente' },
+];
+
+const BH_BUGS_GEN = [
+  { lines:['Tengo 10 euros.','Gasto 15 euros en el super.','Me sobran 5 euros.'],                               bug:2, hint:'No puedes sobrar si gastaste más de lo que tenías' },
+  { lines:['El tren sale a las 8:00.','Tarda 2 horas y media.','Llega a las 9:30.'],                           bug:2, hint:'8:00 + 2:30 = 10:30, no 9:30' },
+  { lines:['Vuelo Madrid-NYC: 8 horas.','NYC tiene -6h respecto Madrid.','Salgo 10:00, llego 12:00 NYC.'],     bug:2, hint:'10:00 + 8h = 18:00 Madrid = 12:00 NYC' },
+  { lines:['Una pizza para 4 personas.','Cada persona come 3 trozos.','Cortamos la pizza en 8 trozos.'],       bug:2, hint:'4×3=12 trozos necesarios, solo hay 8' },
+  { lines:['Descuento 20% sobre 100€.','Precio final: 80€.','Ahorro 15€.'],                                    bug:2, hint:'20% de 100€ = 20€ de ahorro, no 15€' },
+  { lines:['La tienda abre a las 9.','Cierran para comer 2 horas.','Cierran definitivamente a las 20:00.','Están abiertos 11 horas.'], bug:3, hint:'9 a 20 = 11h menos 2h de cierre = 9h abiertas' },
+  { lines:['Soy el mayor de 3 hermanos.','Mi hermana tiene 5 años menos.','Mi hermano tiene 5 años menos.','Los tres somos gemelos.'], bug:3, hint:'Si tienes hermanos con diferente edad no podéis ser gemelos' },
+  { lines:['Pesa 60kg en la Tierra.','En la Luna pesa 1/6.','En la Luna pesa 6kg.'],                           bug:2, hint:'60/6 = 10kg, no 6kg' },
+  { lines:['Hay 12 huevos en una docena.','Compré media docena.','Tengo 8 huevos.'],                           bug:2, hint:'Media docena = 6, no 8' },
+  { lines:['El cuadrado mide 5cm de lado.','Perímetro = 4 × 5 = 20cm.','Área = 5 + 5 = 10cm².'],             bug:2, hint:'Área = lado² = 25cm², no lado+lado' },
+  { lines:['Llevo 30min esperando.','Me dicen que faltan otros 30min.','Esperaré 30min en total.'],            bug:2, hint:'30 ya esperados + 30 más = 60min en total' },
+  { lines:['Viaje de 300km.','Voy a 100 km/h.','Tarda 2 horas.'],                                             bug:2, hint:'300km / 100km/h = 3 horas, no 2' },
+  { lines:['Hay 30 alumnos en clase.','La mitad son chicas.','Hay 20 chicas.'],                                bug:2, hint:'Mitad de 30 = 15, no 20' },
+  { lines:['Una botella de 2L.','Bebo 500ml tres veces.','Me quedan 1L.'],                                     bug:2, hint:'3×500ml=1500ml gastados. Quedan 500ml, no 1L' },
+  { lines:['Un año tiene 365 días.','Febrero tiene 30 días.','Los demás meses son iguales.'],                  bug:1, hint:'Febrero tiene 28 ó 29 días, no 30' },
+  { lines:['Multiplicar por 0 da 0.','5 × 0 = 0.','500.000 × 0 = 500.000.'],                                  bug:2, hint:'Cualquier número × 0 = 0' },
+  { lines:['Voy a comprar pan.','El pan cuesta 1,20€.','Pago con un billete de 1€.','Me dan cambio.'],         bug:3, hint:'No hay cambio si pagas menos de lo que cuesta' },
+  { lines:['Mi coche consume 7L/100km.','Depósito lleno: 50L.','Puedo recorrer 700km.'],                       bug:2, hint:'50L / 7L×100km = 714km, no 700km (aproximado, pero la lógica es correcta... espera: 50/7*100=714)' },
+  { lines:['Reunión a las 15:00.','Ahora son las 13:30.','Faltan 2 horas.'],                                   bug:2, hint:'15:00 - 13:30 = 1 hora y 30 minutos, no 2 horas' },
+  { lines:['Tengo 3 amigos.','Cada uno me debe 10€.','Me deben 40€ en total.'],                                bug:2, hint:'3 amigos × 10€ = 30€, no 40€' },
+];
+
+let bhRound=0, bhScore=0, bhTimer=null, bhTimerSecs=0, bhAnswered=false, bhBug=null;
+const BH_USED_INDICES = [];
+
+function bughuntInit() {
+  document.getElementById('bughunt-start').style.display = 'block';
+  document.getElementById('bughunt-game').style.display = 'none';
+  const d = document.getElementById('bh-desc');
+  if (d) d.textContent = isProgrammer ? 'Haz click en la línea con el bug' : 'Haz click en la línea con el error lógico';
+}
+
+function bughuntStop() { clearInterval(bhTimer); bhAnswered = true; }
+
+function bughuntStart() {
+  bhRound = 0; bhScore = 0; bhAnswered = false; bhBug = null; BH_USED_INDICES.length = 0;
+  document.getElementById('bughunt-start').style.display = 'none';
+  document.getElementById('bughunt-game').style.display = 'block';
+  updateScore(0); bhNextRound();
+}
+
+function bhNextRound() {
+  if (bhRound >= 10) { bhFinish(); return; }
+  bhRound++; bhAnswered = false;
+  document.getElementById('bh-round').textContent = bhRound;
+  document.getElementById('bh-score').textContent = bhScore;
+  document.getElementById('bughunt-feedback').textContent = '';
+
+  // Pick a bug not recently used
+  const bugs = isProgrammer ? BH_BUGS : BH_BUGS_GEN;
+  let idx;
+  do { idx = Math.floor(Math.random() * bugs.length); } while (BH_USED_INDICES.includes(idx));
+  BH_USED_INDICES.push(idx); if (BH_USED_INDICES.length > 10) BH_USED_INDICES.shift();
+  bhBug = bugs[idx];
+
+  const codeEl = document.getElementById('bughunt-code');
+  codeEl.innerHTML = '';
+  bhBug.lines.forEach((line, li) => {
+    const row = document.createElement('div');
+    row.className = 'bh-line'; row.dataset.li = li;
+    row.innerHTML = `<span class="bh-linenum">${li+1}</span><span class="bh-code">${bhEsc(line)}</span>`;
+    row.addEventListener('click', () => bhClick(li));
+    codeEl.appendChild(row);
+  });
+
+  clearInterval(bhTimer);
+  bhTimerSecs = 20;
+  document.getElementById('bh-time').textContent = bhTimerSecs;
+  const bar = document.getElementById('bughunt-timer-bar');
+  bar.style.width = '100%'; bar.style.background = '#00ff00';
+  bhTimer = setInterval(() => {
+    bhTimerSecs--;
+    document.getElementById('bh-time').textContent = bhTimerSecs;
+    bar.style.width = (bhTimerSecs / 20 * 100) + '%';
+    if (bhTimerSecs <= 7) bar.style.background = '#ff4400';
+    if (bhTimerSecs <= 0) { clearInterval(bhTimer); if (!bhAnswered) bhReveal(); }
+  }, 1000);
+}
+
+function bhEsc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function bhClick(li) {
+  if (bhAnswered) return;
+  bhAnswered = true; clearInterval(bhTimer);
+  document.querySelectorAll('.bh-line').forEach((row, i) => {
+    row.classList.add(i === bhBug.bug ? 'hit-ok' : (i === li && i !== bhBug.bug ? 'hit-bad' : ''));
+  });
+  if (li === bhBug.bug) {
+    const bonus = Math.ceil(bhTimerSecs / 4) * 10;
+    const pts = 100 + bonus;
+    bhScore += pts; updateScore(bhScore);
+    document.getElementById('bh-score').textContent = bhScore;
+    document.getElementById('bughunt-feedback').innerHTML = `<span style="color:#00ff00">BUG EN LÍNEA ${li+1} — +${pts}</span>`;
+    beepOk();
+  } else {
+    document.getElementById('bughunt-feedback').innerHTML = `<span style="color:#ff2200">INCORRECTO — Bug en línea ${bhBug.bug+1}: ${bhEsc(bhBug.hint)}</span>`;
+    beepError();
+  }
+  setTimeout(bhNextRound, 1500);
+}
+
+function bhReveal() {
+  bhAnswered = true;
+  document.querySelectorAll('.bh-line').forEach((row, i) => { if (i === bhBug.bug) row.classList.add('hit-ok'); });
+  document.getElementById('bughunt-feedback').innerHTML = `<span style="color:#666">TIEMPO — Bug en línea ${bhBug.bug+1}: ${bhEsc(bhBug.hint)}</span>`;
+  setTimeout(bhNextRound, 1700);
+}
+
+function bhFinish() {
+  clearInterval(bhTimer);
+  const score = bhScore;
+  markResult(true, score >= 700, 'bughunt');
+  let duckMsg;
+  if (score >= 1000)    duckMsg = '"Ojo clínico. Casi tan bueno como el pato."';
+  else if (score >= 700) duckMsg = '"Decente. Para ser humano."';
+  else                   duckMsg = '"¿Llevas los bugs a producción también?"';
+  beepWin();
+  showGameOver({ title: score >= 700 ? 'BUEN OJO' : 'GAME OVER', score, gameId:'bughunt', duckMsg, onReplay:bughuntStart });
+}
+
+// ═════════════════════════════════════════════════════════════════
+// GAME 11 ── DUCK WORDLE
+// ═════════════════════════════════════════════════════════════════
+// Word banks per length × mode (A-Z only — keyboard only accepts a-z)
+const WL_P4 = ['NULL','VOID','BOOL','CHAR','ENUM','HASH','HEAP','HOOK','ITER','LINT','MOCK','NODE','PIPE','POLL','PUSH','REPO','REST','SLUG','SMTP','SORT','SWAP','TEST','TREE','TYPE'];
+const WL_P5 = ['REACT','REDUX','PROXY','FETCH','ASYNC','AWAIT','ARRAY','CLASS','CONST','DEBUG','ERROR','EVENT','FIBER','HOOKS','MERGE','MODAL','PARSE','PATCH','QUEUE','QUERY','ROUTE','SCOPE','STACK','STATE','STORE','TOKEN','TUPLE','TYPED','UNION','YIELD','CACHE','CHUNK','CLONE','DEFER','DRAFT'];
+const WL_P6 = ['DOCKER','GITHUB','LAMBDA','PRISMA','PYTHON','README','RETURN','ROUTER','SPREAD','STRING','SWITCH','TYPEOF','IMPORT','EXPORT','MODULE','OBJECT','RECORD','STATIC','STRUCT','THROWS'];
+
+const WL_G4 = ['CASA','LUNA','AMOR','VIDA','AZUL','ROJO','AGUA','AIRE','GATO','PATO','OLLA','TAZA','LAGO','PIEL','BESO','FOCA','LANA','TEMA','SOPA','COPA','VELA','NUBE','PINO','RANA','DEDO','PELO','BOCA','MANO','OLOR','VINO'];
+const WL_G5 = ['PLAYA','CAMPO','CIELO','NIEVE','MANOS','BESOS','RISAS','SUENO','ARBOL','VUELO','CARTA','PIANO','RUIDO','SILLA','CALLE','RELOJ','VERDE','CALMA','LIBRO','FUEGO','TARDE','PARED','MONTE','PERRO','VOLAR'];
+const WL_G6 = ['CAMINO','CIUDAD','BOSQUE','TIEMPO','MUSICA','JARDIN','VERANO','AMIGOS','COCINA','FIESTA','PASION','CARINO','PUEBLO','FRENTE','FLORES','TESORO','PERROS','MADERA','PENSAR','CIERRE'];
+
+let wlTarget='', wlRow=0, wlInput='', wlOver=false;
+
+async function getWordDefinition(word, mode) {
+  const prompt = mode === 'programmer'
+    ? `Define brevemente el término técnico "${word}" en máximo 15 palabras. Responde SOLO con la definición, sin introducción.`
+    : `Define brevemente la palabra "${word}" en máximo 15 palabras. Responde SOLO con la definición, sin introducción.`;
+  try {
+    const resp = await fetch('http://localhost:1234/v1/chat/completions', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'local-model', max_tokens:60, messages:[{ role:'user', content:prompt }] })
+    });
+    const data = await resp.json();
+    return data.choices[0].message.content.trim();
+  } catch { return 'Definición no disponible.'; }
+}
+
+function wordleInit() {
+  const banks = isProgrammer ? [WL_P4, WL_P5, WL_P6] : [WL_G4, WL_G5, WL_G6];
+  const allWords = banks.flat();
+  wlTarget = allWords[Math.floor(Math.random() * allWords.length)];
+  wlRow = 0; wlInput = ''; wlOver = false;
+  wlBuildGrid(); wlBuildKeyboard();
+  document.getElementById('wordle-msg').textContent = `> ADIVINA LA PALABRA (${wlTarget.length} letras)`;
+  document.removeEventListener('keydown', wlKeyHandler);
+  document.addEventListener('keydown', wlKeyHandler);
+  updateScore(0);
+}
+
+function wordleStop() { document.removeEventListener('keydown', wlKeyHandler); }
+
+function wlKeyHandler(e) {
+  if (currentGame !== 'wordle' || wlOver) return;
+  if (e.key === 'Enter')          { e.preventDefault(); wlSubmit(); }
+  else if (e.key === 'Backspace') { wlInput = wlInput.slice(0,-1); wlRenderCurrent(); }
+  else if (/^[a-zA-Z]$/.test(e.key) && wlInput.length < wlTarget.length) { wlInput += e.key.toUpperCase(); wlRenderCurrent(); }
+}
+
+function wlBuildGrid() {
+  const n = wlTarget.length;
+  const cellW = n <= 4 ? 37 : n === 5 ? 31 : 27;
+  const gridW = n * cellW + (n - 1) * 3;
+  const grid = document.getElementById('wordle-grid');
+  grid.innerHTML = '';
+  grid.style.width = gridW + 'px';
+  for (let r = 0; r < 6; r++) {
+    const row = document.createElement('div');
+    row.className = 'wordle-row'; row.id = 'wr-' + r;
+    row.style.gridTemplateColumns = `repeat(${n}, ${cellW}px)`;
+    for (let c = 0; c < n; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'wordle-cell'; cell.id = `wc-${r}-${c}`;
+      cell.style.height = cellW + 'px';
+      cell.style.fontSize = cellW <= 27 ? '12px' : '14px';
+      row.appendChild(cell);
+    }
+    grid.appendChild(row);
+  }
+}
+
+function wlBuildKeyboard() {
+  const rows = [['Q','W','E','R','T','Y','U','I','O','P'],['A','S','D','F','G','H','J','K','L'],['ENT','Z','X','C','V','B','N','M','DEL']];
+  const kb = document.getElementById('wordle-keyboard');
+  kb.innerHTML = '';
+  rows.forEach(row => {
+    const div = document.createElement('div'); div.className = 'wordle-kb-row';
+    row.forEach(k => {
+      const btn = document.createElement('button');
+      btn.className = 'wkey' + (k.length > 1 ? ' wide' : '');
+      btn.id = 'wk-' + k; btn.textContent = k;
+      btn.onclick = () => {
+        if (k === 'ENT') wlSubmit();
+        else if (k === 'DEL') { wlInput = wlInput.slice(0,-1); wlRenderCurrent(); }
+        else if (wlInput.length < wlTarget.length) { wlInput += k; wlRenderCurrent(); }
+      };
+      div.appendChild(btn);
+    });
+    kb.appendChild(div);
+  });
+}
+
+function wlRenderCurrent() {
+  const n = wlTarget.length;
+  for (let c = 0; c < n; c++) {
+    const cell = document.getElementById(`wc-${wlRow}-${c}`);
+    if (cell) { cell.textContent = wlInput[c] || ''; cell.className = 'wordle-cell' + (c < wlInput.length ? ' active' : ''); }
+  }
+}
+
+function wlEval(guess, target) {
+  const n = target.length;
+  const res = Array(n).fill('absent');
+  const used = Array(n).fill(false);
+  for (let i = 0; i < n; i++) if (guess[i] === target[i]) { res[i] = 'correct'; used[i] = true; }
+  for (let i = 0; i < n; i++) {
+    if (res[i] === 'correct') continue;
+    for (let j = 0; j < n; j++) {
+      if (!used[j] && guess[i] === target[j]) { res[i] = 'present'; used[j] = true; break; }
+    }
+  }
+  return res;
+}
+
+function wlRenderRow(r, word, result) {
+  const n = wlTarget.length;
+  for (let c = 0; c < n; c++) {
+    const cell = document.getElementById(`wc-${r}-${c}`);
+    if (cell) { cell.textContent = word[c]; cell.className = 'wordle-cell ' + result[c]; }
+  }
+}
+
+function wlUpdateKeys(word, result) {
+  const PRI = { correct:3, present:2, absent:1 };
+  for (let i = 0; i < word.length; i++) {
+    const btn = document.getElementById('wk-' + word[i]);
+    if (!btn) continue;
+    const cur = btn.classList.contains('correct') ? 3 : btn.classList.contains('present') ? 2 : btn.classList.contains('absent') ? 1 : 0;
+    if (PRI[result[i]] > cur) btn.className = 'wkey' + (btn.classList.contains('wide') ? ' wide':'') + ' ' + result[i];
+  }
+}
+
+async function wlSubmit() {
+  if (wlOver || wlInput.length < wlTarget.length) {
+    if (wlInput.length < wlTarget.length) document.getElementById('wordle-msg').textContent = '> FALTAN LETRAS';
+    return;
+  }
+  const result = wlEval(wlInput, wlTarget);
+  wlRenderRow(wlRow, wlInput, result);
+  wlUpdateKeys(wlInput, result);
+  wlRow++;
+  const won = result.every(r => r === 'correct');
+  if (won || wlRow === 6) {
+    wlOver = true;
+    document.removeEventListener('keydown', wlKeyHandler);
+    const score = won ? (7 - wlRow) * 100 : 0;
+    markResult(true, won, 'wordle');
+    won ? beepWin() : beepError();
+    document.getElementById('wordle-msg').innerHTML = '<span class="blink">&gt; CONSULTANDO AL PATO...</span>';
+    const definition = await getWordDefinition(wlTarget, MODE);
+    const defSafe = definition.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let duckMsg;
+    if (!won)             duckMsg = isProgrammer ? '"Ni con 6 intentos. ¿Seguro que eres dev?"' : '"6 intentos y nada. El vocabulario no es lo tuyo."';
+    else if (wlRow === 1) duckMsg = '"¿Trampa? No hay otra explicación."';
+    else if (wlRow <= 3)  duckMsg = '"Rápido. Casi como el pato."';
+    else if (wlRow <= 5)  duckMsg = '"Lo conseguiste. Por los pelos."';
+    else                  duckMsg = '"Sexto intento. El pato sudó frío."';
+    const extraHtml = `<div style="font-size:11px;color:#00aa00;margin:6px 0 2px">&gt; DEFINICIÓN: ${wlTarget}</div>
+      <div style="font-size:11px;color:#00cc00;font-style:italic;line-height:1.5;max-width:280px;text-align:center">"${defSafe}"</div>`;
+    showGameOver({ title:won ? '¡CORRECTO!' : 'GAME OVER', score, gameId:'wordle', duckMsg, extraHtml, onReplay:wordleInit });
+  } else {
+    wlInput = ''; wlRenderCurrent();
+    document.getElementById('wordle-msg').textContent = `> INTENTO ${wlRow}/6`;
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════
+// GAME 12 ── FROGGER DUCK (endless runner)
+// ═════════════════════════════════════════════════════════════════
+const FR = {
+  canvas:null, ctx:null,
+  duck:{ x:190 },
+  lanes:[],
+  lives:3, score:0,
+  scrollSpeed:1.5, lateralMult:1.0,
+  running:false, started:false,
+  frameId:null, hitFlash:0,
+  laneTimer:0, laneInterval:80,
+  lanesPassed:0,
+  W:380, H:270, LIVES_H:18,
+  SAFE_Y:228,     // top of duck safe zone (H - 42)
+  LANE_H:52,
+  DUCK_STEP:22, DUCK_MIN:5, DUCK_MAX:325,
+  MAX_SPEED:4.5,
+};
+
+function froggerInit() {
+  FR.canvas = document.getElementById('frogger-canvas');
+  if (!FR.canvas) return;
+  FR.ctx = FR.canvas.getContext('2d');
+  cancelAnimationFrame(FR.frameId);
+  FR.duck = { x:190 };
+  FR.lanes = []; FR.lives = 3; FR.score = 0;
+  FR.scrollSpeed = 1.5; FR.lateralMult = 1.0;
+  FR.running = false; FR.started = false; FR.hitFlash = 0;
+  FR.laneTimer = 0; FR.laneInterval = 80; FR.lanesPassed = 0;
+  document.removeEventListener('keydown', froggerKey);
+  document.addEventListener('keydown', froggerKey);
+  updateScore(0);
+  froggerDraw();
+}
+
+function froggerStop() {
+  cancelAnimationFrame(FR.frameId);
+  FR.running = false;
+  document.removeEventListener('keydown', froggerKey);
+}
+
+function frSpawnLane() {
+  const dir = Math.random() < 0.5 ? 1 : -1;
+  const numCars = 2 + (Math.random() < 0.38 ? 1 : 0); // 2 cars usually, 3 sometimes
+  const carW = 44 + Math.floor(Math.random() * 18);
+  const lateralSpd = (1.2 + Math.random() * 1.0) * FR.lateralMult;
+  const cars = [];
+  const zone = FR.W / numCars;
+  for (let i = 0; i < numCars; i++) {
+    const baseX = zone * i + zone * 0.1 + Math.random() * Math.max(0, zone * 0.6 - carW);
+    cars.push({ x: Math.max(0, Math.min(FR.W - carW, baseX)), w: carW, speed: lateralSpd, dir });
+  }
+  FR.lanes.push({ y: -FR.LANE_H, cars, passed:false });
+}
+
+function froggerKey(e) {
+  if (currentGame !== 'frogger') return;
+  const k = e.key;
+  const isLR = k === 'ArrowLeft' || k === 'ArrowRight' ||
+               k === 'a' || k === 'd' || k === 'A' || k === 'D';
+  if (!isLR) return;
+  e.preventDefault();
+
+  if (!FR.started) {
+    FR.started = true; FR.running = true;
+    FR.frameId = requestAnimationFrame(froggerLoop);
+  }
+  if (!FR.running || FR.hitFlash > 30) return;
+
+  const kl = k.toLowerCase();
+  if (kl === 'arrowleft'  || kl === 'a') FR.duck.x = Math.max(FR.DUCK_MIN, FR.duck.x - FR.DUCK_STEP);
+  else                                    FR.duck.x = Math.min(FR.DUCK_MAX, FR.duck.x + FR.DUCK_STEP);
+  beepClick();
+  froggerCheckCollision();
+}
+
+function froggerLoop() {
+  if (!FR.running) return;
+  froggerUpdate();
+  froggerDraw();
+  FR.frameId = requestAnimationFrame(froggerLoop);
+}
+
+function froggerUpdate() {
+  FR.laneTimer++;
+  if (FR.laneTimer >= FR.laneInterval) { FR.laneTimer = 0; frSpawnLane(); }
+
+  for (const lane of FR.lanes) {
+    lane.y += FR.scrollSpeed;
+    for (const car of lane.cars) {
+      car.x += car.speed * car.dir;
+      if (car.dir === 1  && car.x > FR.W)        car.x = -car.w;
+      if (car.dir === -1 && car.x + car.w < 0)   car.x = FR.W;
+    }
+    if (!lane.passed && lane.y > FR.H - 8) {
+      lane.passed = true;
+      FR.lanesPassed++;
+      FR.score += 100;
+      updateScore(FR.score);
+      if (FR.lanesPassed % 5 === 0) {
+        FR.scrollSpeed  = Math.min(FR.scrollSpeed + 0.2,  FR.MAX_SPEED);
+        FR.lateralMult  = Math.min(FR.lateralMult  * 1.08, 3.0);
+        FR.laneInterval = Math.max(42, FR.laneInterval - 3);
+      }
+    }
+  }
+  FR.lanes = FR.lanes.filter(l => l.y < FR.H + FR.LANE_H);
+
+  if (FR.hitFlash > 0) FR.hitFlash--;
+  froggerCheckCollision();
+}
+
+function froggerCheckCollision() {
+  if (FR.hitFlash > 0) return;
+  const dL = FR.duck.x + 5, dR = FR.duck.x + 45;
+  for (const lane of FR.lanes) {
+    if (lane.y + FR.LANE_H <= FR.SAFE_Y) continue;
+    if (lane.y >= FR.H) continue;
+    for (const car of lane.cars) {
+      if (dR > car.x + 4 && dL < car.x + car.w - 4) { froggerHit(); return; }
+    }
+  }
+}
+
+function froggerHit() {
+  FR.lives--;
+  beepError();
+  FR.hitFlash = 60;
+  if (FR.lives <= 0) {
+    FR.running = false;
+    cancelAnimationFrame(FR.frameId);
+    froggerDraw();
+    const n = FR.lanesPassed;
+    const duckMsg = n <= 3  ? '"Primera víctima del tráfico virtual."' :
+                    n <= 8  ? '"Ni el tráfico virtual superas."' :
+                    n <= 15 ? '"Decente. Para ser peatón."' :
+                    n <= 25 ? '"Buenos reflejos. Casi felino."' :
+                              '"Eres el Frogger del debugging."';
+    markResult(true, n >= 8, 'frogger');
+    setTimeout(() => showGameOver({
+      title:'ATROPELLADO', score:FR.score, gameId:'frogger', duckMsg, onReplay:froggerInit
+    }), 500);
+  }
+}
+
+function froggerDraw() {
+  if (!FR.ctx) return;
+  const ctx = FR.ctx;
+  const { W, H, LIVES_H, SAFE_Y, LANE_H } = FR;
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  // Lives bar
+  ctx.fillStyle = '#001a00';
+  ctx.fillRect(0, 0, W, LIVES_H);
+  ctx.font = '13px Courier New'; ctx.textAlign = 'left';
+  for (let i = 0; i < 3; i++) {
+    ctx.fillStyle = i < FR.lives ? '#ff3333' : '#331111';
+    ctx.fillText('♥', 6 + i * 18, 13);
+  }
+  ctx.fillStyle = '#00aa00'; ctx.font = '11px Courier New'; ctx.textAlign = 'right';
+  ctx.fillText('LANES: ' + String(FR.lanesPassed).padStart(3,'0'), W - 6, 13);
+
+  // Road area background
+  ctx.fillStyle = '#070707';
+  ctx.fillRect(0, LIVES_H, W, SAFE_Y - LIVES_H);
+  ctx.strokeStyle = '#001400'; ctx.lineWidth = 1;
+  for (let x = 38; x < W; x += 38) {
+    ctx.beginPath(); ctx.moveTo(x, LIVES_H); ctx.lineTo(x, SAFE_Y); ctx.stroke();
+  }
+
+  // Scrolling lanes
+  for (const lane of FR.lanes) {
+    if (lane.y + LANE_H < LIVES_H || lane.y > H) continue;
+    frDrawLane(ctx, lane);
+  }
+
+  // Duck safe zone
+  ctx.fillStyle = '#001800';
+  ctx.fillRect(0, SAFE_Y, W, H - SAFE_Y);
+  ctx.fillStyle = '#00ff00';
+  ctx.fillRect(0, SAFE_Y, W, 2);
+  ctx.fillStyle = '#004400'; ctx.font = '9px Courier New'; ctx.textAlign = 'center';
+  ctx.fillText('─────────────── ZONA SEGURA ───────────────', W/2, SAFE_Y + 11);
+
+  // Duck (blink on hit)
+  if (FR.hitFlash === 0 || Math.floor(FR.hitFlash / 6) % 2 === 0) frDrawDuck(ctx);
+
+  // "Press to start" overlay
+  if (!FR.started) {
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#00ff00'; ctx.font = 'bold 13px Courier New'; ctx.textAlign = 'center';
+    ctx.fillText('> PULSA ← → O A/D PARA EMPEZAR', W/2, H/2 - 8);
+    ctx.fillStyle = '#008800'; ctx.font = '11px Courier New';
+    ctx.fillText('[ ← ] izquierda          [ → ] derecha', W/2, H/2 + 10);
+  }
+
+  ctx.textAlign = 'left';
+}
+
+function frDrawLane(ctx, lane) {
+  const { W, LANE_H, LIVES_H, SAFE_Y } = FR;
+  const clipTop = Math.max(lane.y, LIVES_H);
+  const clipBot = Math.min(lane.y + LANE_H, SAFE_Y);
+  if (clipBot <= clipTop) return;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, clipTop, W, clipBot - clipTop); ctx.clip();
+  ctx.fillStyle = '#0d0d0b';
+  ctx.fillRect(0, lane.y, W, LANE_H);
+  ctx.save(); ctx.setLineDash([6,8]); ctx.strokeStyle = '#003300'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, lane.y);          ctx.lineTo(W, lane.y);          ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, lane.y + LANE_H); ctx.lineTo(W, lane.y + LANE_H); ctx.stroke();
+  ctx.restore();
+  for (const car of lane.cars) frDrawCar(ctx, car, lane.y);
+  ctx.restore();
+}
+
+function frDrawCar(ctx, car, ly) {
+  const { W, LANE_H } = FR;
+  if (car.x + car.w < 0 || car.x > W) return;
+  const cx = Math.max(0, car.x);
+  const cw = Math.min(car.w, W - cx);
+  ctx.fillStyle = '#002a00';
+  ctx.fillRect(cx, ly + 6, cw, LANE_H - 12);
+  ctx.strokeStyle = '#00bb00'; ctx.lineWidth = 1;
+  ctx.strokeRect(cx, ly + 6, cw, LANE_H - 12);
+  ctx.fillStyle = '#00ff00'; ctx.font = '10px Courier New'; ctx.textAlign = 'center';
+  ctx.fillText(car.dir === 1 ? '=>>' : '<<=', car.x + car.w/2, ly + LANE_H/2 + 4);
+}
+
+function frDrawDuck(ctx) {
+  const { SAFE_Y, H } = FR;
+  const dy = SAFE_Y + (H - SAFE_Y) / 2;
+  ctx.fillStyle = FR.hitFlash > 0 ? '#ff4400' : '#00ff00';
+  ctx.font = 'bold 12px Courier New'; ctx.textAlign = 'left';
+  ctx.fillText(">('v'<)", FR.duck.x, dy + 5);
+}
+
+// ═════════════════════════════════════════════════════════════════
 // INIT
 // ═════════════════════════════════════════════════════════════════
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
+  supportsVision = await checkVisionSupport();
+  if (!supportsVision) {
+    const pi = GAME_IDS.indexOf('pixel');
+    if (pi !== -1) GAME_IDS.splice(pi, 1);
+  }
   switchTo(GAME_IDS[Math.floor(Math.random() * GAME_IDS.length)]);
 });
 </script>

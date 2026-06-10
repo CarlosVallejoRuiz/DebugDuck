@@ -121,20 +121,29 @@ async fn stream_lm_studio(
     Ok(())
 }
 
-/// Opens the DebugDuck Arcade window (400×520).  If already open, focuses it.
+/// Opens the DebugDuck Arcade window (400×520).
+/// `personality_mode` is forwarded as a URL query param so games.html can
+/// adapt quiz/typing/wordle/bughunt content to "programmer" or "general".
+/// If the window is already open, close it and reopen with the current mode.
 #[tauri::command]
-async fn launch_games_window(app: tauri::AppHandle) -> Result<(), String> {
+async fn launch_games_window(
+    app: tauri::AppHandle,
+    personality_mode: String,
+) -> Result<(), String> {
     use tauri::Manager;
 
     if let Some(existing) = app.get_webview_window("games") {
-        existing.set_focus().map_err(|e| e.to_string())?;
-        return Ok(());
+        existing.close().map_err(|e| e.to_string())?;
+        // Small delay so the window is fully destroyed before recreating
+        std::thread::sleep(std::time::Duration::from_millis(120));
     }
+
+    let url = format!("games.html?mode={}", personality_mode);
 
     tauri::WebviewWindowBuilder::new(
         &app,
         "games",
-        tauri::WebviewUrl::App("games.html".into()),
+        tauri::WebviewUrl::App(url.into()),
     )
     .title("DebugDuck Arcade")
     .inner_size(400.0, 520.0)

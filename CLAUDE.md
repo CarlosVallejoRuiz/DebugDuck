@@ -256,6 +256,45 @@ open src-tauri/target/debug/bundle/macos/DebugDuck.app
      * Gana pato: "¿En serio? Soy un pato de goma..."
      * Empate: "No está mal para ser humano."
 
+### Minijuegos pendientes de implementar (v2)
+
+7. 🃏 MEMORY DUCK
+   - Tablero de cartas boca abajo
+   - Parejas de emojis técnicos: 💻🐛⚡🦆🔧📦🚀🎯
+   - Tableros: 4x4 (fácil), 4x6 (medio), 6x6 (difícil)
+   - Score: parejas encontradas + bonus por velocidad
+   - Estética retro terminal: cartas como bloques ASCII
+
+8. 🎵 DUCK BEAT
+   - Secuencia de sonidos via Web Audio API
+   - El usuario repite la secuencia pulsando teclas
+   - Secuencia crece cada ronda (como Simon Says)
+   - 4 teclas: A S D F con sonidos distintos
+   - Score: ronda máxima alcanzada
+
+9. 🔢 SUDOKU DUCK
+   - Grid 4x4 mini (fácil de completar en 2-3 min)
+   - Números 1-4, sin repetir en fila/columna/cuadrante
+   - Generador aleatorio de puzzles válidos
+   - Celdas pre-rellenadas resaltadas diferente
+   - Score: tiempo empleado en completarlo
+
+10. 🐛 BUG HUNT
+    - Fragmento de código con 1 error visible
+    - El usuario debe identificar la línea con el bug
+    - Lenguajes: JavaScript, Python, pseudocódigo
+    - 10 rondas, 20 segundos cada una
+    - Banco de 30+ bugs reales y comunes
+    - Score: aciertos + velocidad
+
+11. 💬 DUCK WORDLE
+    - Adivina la palabra técnica en 6 intentos
+    - Palabras de 5-6 letras del mundo tech
+    - Verde: letra correcta en posición correcta
+    - Amarillo: letra existe pero en posición incorrecta
+    - Gris: letra no existe
+    - Banco de 50+ palabras: REACT, REDUX, PROXY...
+    - Score: intentos usados (menos = mejor)
 ### Integración Tamagotchi
 - Completar juego: +5 happiness
 - Ganar (Quiz, Math, Typing >60 WPM): +8 happiness  
