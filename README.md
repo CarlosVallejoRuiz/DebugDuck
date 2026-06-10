@@ -4,6 +4,7 @@
 
 **Tu pato de goma con IA local. Siempre flotando. Siempre juzgándote.**
 
+[![Version](https://img.shields.io/badge/Version-v0.2.0-brightgreen?style=for-the-badge)](https://github.com/CarlosVallejoRuiz/DebugDuck/releases)
 [![Tauri](https://img.shields.io/badge/Tauri_v2-24C8DB?style=for-the-badge&logo=tauri&logoColor=white)](https://tauri.app)
 [![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
@@ -34,14 +35,14 @@ Hablas. El pato piensa. El pato responde. Si lo abandonas mucho tiempo, se pone 
 - 🎭 **Dos personalidades** — Programador (socrático) o General (opinionado)
 - 😈 **Slider de crueldad** — de mentor paciente a "pregunta obvia para cualquier senior"
 - 🥚 **Modo Tamagotchi** — el pato tiene un estado de ánimo que afecta sus respuestas
-- 🎬 **Animaciones por estados** — idle, escuchando, pensando, respondiendo (140 frames PNG)
+- 🎬 **Animaciones por estados** — idle, escuchando, pensando, respondiendo, gametime (140 frames PNG)
 - 🎉 **Botón Eureka** — confeti fullscreen + contador de victorias
 - 🍅 **Pomodoro integrado** — timer 25min con notificación nativa
 - 💬 **Memoria de conversación** — recuerda contexto con compresión automática
 - 🖱️ **Click-through pixel-perfect** — el pato no intercepta clicks en áreas transparentes
 - 🔍 **Detección automática de modelo** — detecta qué modelo tienes cargado en LM Studio
 - 📐 **Posición configurable** — grid 3×3 para mover el widget a cualquier esquina
-- 🎮 **Arcade integrado** — 6 minijuegos retro terminal cuando llevas mucho tiempo trabajando
+- 🎮 **Arcade integrado** — 12 minijuegos retro terminal cuando llevas mucho tiempo trabajando
 
 ---
 
@@ -49,14 +50,22 @@ Hablas. El pato piensa. El pato responde. Si lo abandonas mucho tiempo, se pone 
 
 Después de un tiempo configurable sin jugar, el pato te sugiere un descanso con una partida. La ventana de juegos es estética retro terminal: fondo negro, verde fosforescente, fuente monospace y efecto scanlines.
 
-| # | Juego | Descripción |
-|---|-------|-------------|
-| 🎯 | **Pato al Agua** (Flappy Duck) | Esquiva obstáculos con gravedad. Velocidad progresiva, puntuación por paso. |
-| 🧠 | **Debug Quiz** | 10 preguntas de JS, Python, Git, algoritmos. 15 s por pregunta. Mensajes sarcásticos del pato. |
-| 🎨 | **Pato Pixel** | Dibuja en un grid 16×16. El modelo local de IA puntúa tu arte con sarcasmo. |
-| ⚡ | **Rubber Duck Typing** | 30 palabras técnicas. Mide WPM y precisión. Banco de 100+ términos. |
-| 🔢 | **Duck Math** | 10 operaciones aritméticas, 8 segundos cada una. Dificultad configurable. |
-| ❌⭕ | **3 en Raya** | IA con minimax perfecto. El pato nunca pierde. Mensajes sarcásticos garantizados. |
+> Los juegos marcados como **Adaptable** cambian su contenido según el modo activo (Programador / General).
+
+| Juego | Descripción | Modo |
+|-------|-------------|------|
+| 🎯 **Flappy Duck** | Esquiva obstáculos al estilo Flappy Bird | Todos |
+| 🧠 **Debug Quiz** | Trivia de programación o cultura general | Adaptable |
+| 🎨 **Pato Pixel** | Dibuja y recibe puntuación de la IA local | Requiere visión |
+| ⚡ **Rubber Duck Typing** | Velocidad de escritura técnica o cotidiana | Adaptable |
+| 🔢 **Duck Math** | Operaciones mentales contra el reloj | Todos |
+| ❌⭕ **3 en Raya** | Juega contra el pato (minimax perfecto) | Todos |
+| 🃏 **Memory Duck** | Encuentra las parejas de cartas técnicas | Todos |
+| 🎵 **Duck Beat** | Simon Says con sonidos generados por Web Audio API | Todos |
+| 🔢 **Sudoku Duck** | Completa el grid 4×4 sin repetir números | Todos |
+| 🐛 **Bug Hunt** | Encuentra el bug en código o error lógico | Adaptable |
+| 💬 **Duck Wordle** | Adivina la palabra + definición por IA local | Adaptable |
+| 🚗 **Frogger Duck** | Carretera infinita con velocidad creciente | Todos |
 
 ### Configuración del Arcade
 
@@ -229,6 +238,16 @@ src/hooks/
 ├── useTamagotchi.ts         # Sistema de estado de ánimo + decay automático
 └── useWindowPosition.ts     # Posicionamiento en pantalla via Rust
 ```
+
+### Estados de animación
+
+| Estado | Trigger | Descripción |
+|--------|---------|-------------|
+| `idle` | Por defecto | Loop continuo + animación aleatoria cada 8-15s |
+| `listening` | Micrófono activo | Cicla rasca / asiente / libreta |
+| `thinking` | Esperando respuesta IA | Loop rasca continuo |
+| `responding` | Respuesta visible | Loop idle |
+| `gametime` | Ventana arcade abierta | 3 fases: entrada → loop → salida inversa |
 
 ---
 
