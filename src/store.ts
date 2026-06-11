@@ -33,6 +33,7 @@ interface AppState {
   maxHistoryItems: number
   aiProvider: string
   customUrl: string
+  globalShortcut: string
 
   // ── session-only (not persisted) ───────────────────────────
   conversationHistory: HistoryEntry[]
@@ -61,6 +62,7 @@ interface AppState {
   clearHistory: () => void
   setAiProvider: (provider: string) => void
   setCustomUrl: (url: string) => void
+  setGlobalShortcut: (shortcut: string) => void
 }
 
 export const useStore = create<AppState>()(
@@ -84,6 +86,7 @@ export const useStore = create<AppState>()(
       maxHistoryItems:     50,
       aiProvider:          'lmstudio',
       customUrl:           '',
+      globalShortcut:      'CommandOrControl+Shift+D',
       conversationHistory: [],
       conversationSummary: '',
 
@@ -114,8 +117,9 @@ export const useStore = create<AppState>()(
         historyLog: s.historyLog.filter((item) => item.id !== id),
       })),
       clearHistory:    () => set({ historyLog: [] }),
-      setAiProvider:   (provider) => set({ aiProvider: provider }),
-      setCustomUrl:    (url)      => set({ customUrl: url }),
+      setAiProvider:     (provider) => set({ aiProvider: provider }),
+      setCustomUrl:      (url)      => set({ customUrl: url }),
+      setGlobalShortcut: (shortcut) => set({ globalShortcut: shortcut }),
     }),
     {
       name: 'debugduck-storage',
@@ -139,6 +143,7 @@ export const useStore = create<AppState>()(
         maxHistoryItems:    s.maxHistoryItems,
         aiProvider:         s.aiProvider,
         customUrl:          s.customUrl,
+        globalShortcut:     s.globalShortcut,
       }),
     }
   )

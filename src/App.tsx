@@ -44,9 +44,12 @@ function App() {
   useEffect(() => {
     moveToPosition(lastPosition as Position)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const [shortcutFlash, setShortcutFlash] = useState(false)
+
   const incrementEurekas    = useStore((s) => s.incrementEurekas)
   const deleteHistoryItem   = useStore((s) => s.deleteHistoryItem)
   const clearHistory        = useStore((s) => s.clearHistory)
+  const globalShortcut      = useStore((s) => s.globalShortcut)
   const gamesEnabled        = useStore((s) => s.gamesEnabled)
   const gamesInterval     = useStore((s) => s.gamesInterval)
   const personalityMode   = useStore((s) => s.personalityMode)
@@ -197,6 +200,32 @@ function App() {
     return () => { unlisten?.() }
   }, [setDuckHappiness, startGamesTimer])
 
+  // Global keyboard shortcut — re-register on mount if user stored a custom one,
+  // then listen for the trigger event emitted by Rust.
+  const showBubbleRef  = useRef(false)
+  const isThinkingRef  = useRef(false)
+
+  useEffect(() => {
+    const DEFAULT = 'CommandOrControl+Shift+D'
+    if (globalShortcut !== DEFAULT) {
+      invoke('update_global_shortcut', { oldShortcut: DEFAULT, newShortcut: globalShortcut }).catch(() => {})
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined
+    listen<void>('global-shortcut-triggered', () => {
+      if (showBubbleRef.current || isThinkingRef.current) return
+      clearResponse()
+      setShortcutFlash(true)
+      setTimeout(() => {
+        setShortcutFlash(false)
+        startListening()
+      }, 800)
+    }).then(fn => { unlisten = fn })
+    return () => { unlisten?.() }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Offscreen canvas for per-pixel alpha sampling of the duck PNG.
   const duckCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const duckCtxRef   = useRef<CanvasRenderingContext2D | null>(null)
@@ -299,6 +328,10 @@ function App() {
 
   const showBubble = bubblePhase !== null
 
+  // Keep refs in sync — read inside callbacks to avoid stale closures.
+  useEffect(() => { showBubbleRef.current = showBubble }, [showBubble])
+  useEffect(() => { isThinkingRef.current = isThinking }, [isThinking])
+
   // Keep uiVisibleRef in sync so the click-through interval can read it.
   useEffect(() => {
     uiVisibleRef.current = showBubble || showSettings || showGameSuggestion
@@ -384,6 +417,16 @@ function App() {
       }`}>
         {/* Wrapper gives the timer a relative anchor next to the duck */}
         <div className="relative">
+          {shortcutFlash && (
+            <div className={`absolute left-1/2 -translate-x-1/2 z-50 pointer-events-none ${
+              isTopPosition ? 'top-full mt-1' : '-top-8'
+            }`}>
+              <div className="bg-indigo-500 text-white text-[10px] font-medium rounded-full px-2.5 py-0.5 shadow whitespace-nowrap animate-pulse">
+                🎙️ Atajo activado
+              </div>
+            </div>
+          )}
+
           {pomodoroRunning && !showSettings && (
             <div
               className={`absolute left-2 z-50 pointer-events-auto cursor-pointer ${

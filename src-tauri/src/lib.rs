@@ -265,6 +265,27 @@ async fn score_pixel_art(base64_image: String, topic: String) -> Result<String, 
     Ok(content.to_string())
 }
 
+/// Re-registers the global mic shortcut when the user changes it in settings.
+#[tauri::command]
+async fn update_global_shortcut(
+    app: tauri::AppHandle,
+    old_shortcut: String,
+    new_shortcut: String,
+) -> Result<(), String> {
+    use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+    use tauri::{Emitter, Manager};
+    let _ = app.global_shortcut().unregister(old_shortcut.as_str());
+    app.global_shortcut()
+        .on_shortcut(new_shortcut.as_str(), move |app, _shortcut, event| {
+            if event.state == ShortcutState::Pressed {
+                if let Some(window) = app.get_webview_window("main") {
+                    window.emit("global-shortcut-triggered", ()).ok();
+                }
+            }
+        })
+        .map_err(|e| e.to_string())
+}
+
 /// Returns cursor position in logical pixels relative to the window's top-left.
 /// Uses Rust/OS APIs so it works even when cursor events are being ignored by WKWebView.
 #[tauri::command]
@@ -278,12 +299,15 @@ fn get_cursor_pos(window: tauri::WebviewWindow) -> (f64, f64) {
     )
 }
 
+const DEFAULT_SHORTCUT: &str = "CommandOrControl+Shift+D";
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
-    .invoke_handler(tauri::generate_handler![set_ignore_cursor, get_cursor_pos, launch_confetti_window, stream_lm_studio, launch_games_window, finish_game, score_pixel_art, launch_history_window])
+    .invoke_handler(tauri::generate_handler![set_ignore_cursor, get_cursor_pos, launch_confetti_window, stream_lm_studio, launch_games_window, finish_game, score_pixel_art, launch_history_window, update_global_shortcut])
     .plugin(tauri_plugin_http::init())
     .plugin(tauri_plugin_notification::init())
+    .plugin(tauri_plugin_global_shortcut::Builder::new().build())
     .on_window_event(|window, event| {
       // Only prevent close on the main widget — all other windows (games, confetti, …)
       // are allowed to close normally.
@@ -294,6 +318,22 @@ pub fn run() {
       }
     })
     .setup(|app| {
+      // Register the default global shortcut. If the user has customised it,
+      // App.tsx will call update_global_shortcut on mount to switch to theirs.
+      {
+        use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+        use tauri::{Emitter, Manager};
+        app.global_shortcut()
+          .on_shortcut(DEFAULT_SHORTCUT, |app, _shortcut, event| {
+            if event.state == ShortcutState::Pressed {
+              if let Some(window) = app.get_webview_window("main") {
+                window.emit("global-shortcut-triggered", ()).ok();
+              }
+            }
+          })
+          .ok(); // Non-fatal — shortcut may already be taken by another app
+      }
+
       if cfg!(debug_assertions) {
         app.handle().plugin(
           tauri_plugin_log::Builder::default()

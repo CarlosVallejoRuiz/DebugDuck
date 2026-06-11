@@ -11,16 +11,20 @@ Widget de escritorio nativo (macOS/Windows) para "Rubber Duck Debugging" interac
   3. Respuesta → texto scrolleable + botones Eureka/Pomo
 - **¡Eureka!** → confeti fullscreen + +1 contador + +10 happiness (Tamagotchi)
 - **Pomo** → arranca timer 25min visible encima del pato, notificación al terminar
-- **Ajustes** (engranaje hover) → panel con blur
+- **Atajo global** `⌘+Shift+D` → activa micrófono desde cualquier app (configurable)
+- **Botones verticales** (⚙️🎮📋) a la derecha del pato — siempre visibles
+- **Ajustes** (⚙️) → panel con blur y scroll
 
 ## 2. Stack Tecnológico
 
 - **Frontend:** React + TypeScript + Vite + Tailwind CSS v4
 - **Estado:** Zustand con persist
 - **Desktop:** Tauri v2 (Rust)
-- **IA:** LM Studio — `http://localhost:1234/v1/chat/completions`
+- **IA:** LM Studio (`localhost:1234`) u Ollama (`localhost:11434`), auto-detectado
 - **HTTP:** `@tauri-apps/plugin-http` para bypass CORS en bundle firmado
 - **Animaciones:** Canvas offscreen 190×190px, PNGs normalizados a 600×600
+- **i18n:** ES / EN / FR / DE / PT via hook `useTranslation()` + Zustand
+- **Atajo global:** `tauri-plugin-global-shortcut` — `⌘+Shift+D` configurable
 
 ## 3. Arquitectura
 src/
@@ -59,12 +63,15 @@ src-tauri/
 ## 5. Comandos Rust Implementados
 
 ```rust
-call_lm_studio(prompt)      // fetch no-stream a LM Studio
-stream_lm_studio(...)       // streaming SSE → eventos Tauri
-set_ignore_cursor(ignore)   // click-through nativo
-get_cursor_pos()            // posición cursor relativa ventana
-launch_confetti_window()    // ventana overlay confeti fullscreen
-set_fullscreen_confetti()   // DEPRECATED — usar launch_confetti_window
+stream_lm_studio(messages, model, max_tokens, base_url)  // streaming SSE → eventos Tauri
+set_ignore_cursor(ignore)       // click-through nativo
+get_cursor_pos()                // posición cursor relativa ventana
+launch_confetti_window()        // ventana overlay confeti fullscreen
+launch_games_window(mode)       // ventana arcade 400×520
+finish_game(completed, won, game) // cierra arcade + emite game-result
+launch_history_window()         // ventana historial 500×620
+update_global_shortcut(old, new) // re-registra atajo teclado global
+score_pixel_art(image, topic)   // IA puntúa pixel art (requiere modelo visión)
 ```
 
 ## 6. Sistema de Animaciones
@@ -85,18 +92,30 @@ src/assets/animations/
 ## 7. Panel de Ajustes (SettingsPanel)
 
 - **Personalidad:** toggle Programador 🦆 / General 🌍
-- **Modo Tamagotchi:** toggle ON/OFF (oculta slider crueldad cuando ON)
-- **Slider crueldad** (0-100): Mentor paciente / Equilibrado / Sin piedad
-- **Modelo activo:** detectado automáticamente de LM Studio + botón ↺
-- **Forzar modelo:** select manual override
+- **Idioma:** selector ES/EN/FR/DE/PT (5 banderas)
 - **Memoria conversación:** toggle ON/OFF + botón limpiar
+- **Modo Tamagotchi:** toggle ON/OFF (oculta slider crueldad cuando ON)
+- **Minijuegos:** toggle ON/OFF + selector frecuencia [15m/25m/45m/60m] + timer
+- **Slider crueldad** (0-100): Mentor paciente / Equilibrado / Sin piedad
+- **🔌 Servidor de IA:** botones LM Studio / Ollama / Custom + indicador estado + auto-detectar
+- **Modelo activo:** detectado automáticamente + botón ↺
+- **Forzar modelo:** select manual override
+- **⌨️ Atajo de teclado:** display atajo actual + botón "Cambiar" (modo grabación)
 - **Posición ventana:** grid 3×3 flechas
+- Panel con `overflow-y: auto` para scroll cuando el contenido no cabe
 
 ## 8. Sistema de IA
 
+**Proveedores soportados:**
+- **LM Studio** `http://localhost:1234` — formato OpenAI (`data[0].id`)
+- **Ollama** `http://localhost:11434` — formato nativo (`models[0].name`) o OpenAI-compat
+- **Custom URL** — cualquier servidor compatible con la API OpenAI
+- Auto-detección al arrancar: prueba LM Studio → Ollama → marca "Sin conexión"
+- `aiProvider` y `customUrl` persistidos en Zustand
+
 **Detección automática de modelo:**
 ```typescript
-GET http://localhost:1234/v1/models → data[0].id
+GET {baseUrl}/v1/models → data[0].id | models[0].name
 isThinkingModel: /qwen|deepseek|r1/i → usa reasoning_content
 ```
 
@@ -115,9 +134,23 @@ isThinkingModel: /qwen|deepseek|r1/i → usa reasoning_content
 - NO persiste entre sesiones, solo la preferencia ON/OFF
 
 **Streaming SSE:**
-- Modelos normales (Mistral, Llama): `stream: true` via comando Rust
+- Modelos normales (Mistral, Llama): `stream: true` via comando Rust `stream_lm_studio`
 - Modelos thinking (Qwen): `stream: false` + extracción de reasoning_content
 - max_tokens: 400 con memoria, 800 sin memoria
+- `base_url` se pasa como parámetro a `stream_lm_studio` para soporte multi-proveedor
+
+**Multiidioma:**
+- `responseLanguage` en Zustand: `'es' | 'en' | 'fr' | 'de' | 'pt'`
+- Inyectado en system prompt: `"Responde SIEMPRE en ${langName}"`
+- UI traducida via `useTranslation()` hook + `translations` object en `i18n.ts`
+- Leído en callbacks via `languageRef` para evitar stale closures
+
+**Historial de conversaciones:**
+- `historyLog: HistoryItem[]` persistido (máx. 50 entradas, configurable)
+- `HistoryItem = { id, timestamp, question, answer, model }`
+- Ventana `history.html` embebida en el binario — lee directo de localStorage
+- Sincronización bidireccional: localStorage → eventos Tauri → Zustand
+- `confirm()` bloqueado en WKWebView — usar modal HTML custom para "Borrar todo"
 
 ## 9. Sistema Tamagotchi (useTamagotchi.ts) — PENDIENTE DE IMPLEMENTAR
 
@@ -310,63 +343,45 @@ open src-tauri/target/debug/bundle/macos/DebugDuck.app
 - `src/App.tsx` — botón 🎮 + lógica de sugerencia automática
 - `src/store.ts` — gamesEnabled: boolean (default: true)
 
-## 15. ROADMAP v0.3.0 — Features pendientes
+## 15. ROADMAP v0.3.0
 
-### 1. Compatibilidad con Ollama
-- Ollama usa por defecto http://localhost:11434
-- API compatible con OpenAI: /api/chat o /v1/chat/completions
-- En useAIResponse.ts detectar automáticamente qué 
-  servidor está activo (LM Studio en 1234 u Ollama en 11434)
-- En SettingsPanel añadir selector: LM Studio / Ollama / Custom URL
-- Permitir URL personalizada para servidores corporativos
-- La detección debe ser automática al arrancar
+### ✅ IMPLEMENTADO
 
-### 2. Soporte multiidioma en respuestas del pato
-- Selector de idioma en SettingsPanel
-- Idiomas: Español, English, Français, Deutsch, Português
-- El idioma seleccionado se inyecta en el system prompt:
-  "Responde SIEMPRE en [idioma]"
-- Persistido en Zustand
-- El pato responde en el idioma del usuario
-- Los mensajes de la UI (bocadillo, ajustes) también 
-  se traducen según el idioma seleccionado
+#### 1. Compatibilidad con Ollama + URL personalizada
+- Auto-detección al arrancar: LM Studio (`:1234`) → Ollama (`:11434`) → "Sin conexión"
+- Selector en SettingsPanel: LM Studio / Ollama / Custom + indicador 🟢/🔴
+- `base_url` pasado como parámetro a `stream_lm_studio` en Rust
+- Permisos `http.json` actualizados: `localhost:11434/**`
 
-### 3. Atajo de teclado global
-- Activar micrófono sin hacer doble clic en el pato
-- Atajo por defecto: Cmd+Shift+D (Mac) / Ctrl+Shift+D (Win)
-- Configurable por el usuario en SettingsPanel
-- Implementar con plugin de Tauri para shortcuts globales:
-  tauri-plugin-global-shortcut
-- El atajo funciona desde cualquier app del sistema
-- Al activarse: el pato hace la animación de listening
+#### 2. Soporte multiidioma (ES/EN/FR/DE/PT)
+- `useTranslation()` + `translations` en `i18n.ts` — 5 idiomas completos
+- Idioma inyectado en system prompt: `"Responde SIEMPRE en ${langName}"`
+- `responseLanguage` persistido en Zustand, leído via ref en callbacks
 
-### 4. Historial de conversaciones
-- Guardar las últimas 50 preguntas y respuestas
-- Persistido en Zustand (survives between sessions)
-- Accesible desde un botón 📋 en el widget
-- Se abre en una ventana nueva (igual que los juegos)
-- Muestra: timestamp, pregunta, respuesta
-- Opciones: copiar respuesta, borrar entrada, borrar todo
-- Estilo coherente con la app (fondo claro, 
-  no retro terminal — es funcional no de juego)
-- Búsqueda por texto dentro del historial
+#### 3. Historial de conversaciones
+- `historyLog: HistoryItem[]` persistido (máx. 50 entradas)
+- Ventana `history.html` con búsqueda, copiar, borrar individual y borrar todo
+- Modal HTML custom (confirm() bloqueado en WKWebView)
+- Sincronización localStorage ↔ eventos Tauri ↔ Zustand
 
-### 5. Modo No Molestar automático
-- Integración con el calendario del sistema
-- Detectar reuniones activas via:
-  * macOS: leer calendarios con plugin Tauri
-  * Windows: integración con calendario de Windows
-- Cuando hay reunión activa:
-  * El pato se oculta automáticamente
-  * O se minimiza a un icono muy pequeño
-  * No responde a doble clic ni atajos
-- Indicador visual cuando está en modo no molestar: 🔕
-- Toggle manual en SettingsPanel para forzar activar/desactivar
-- Notificación cuando termina la reunión y el pato vuelve
+#### 4. Botones verticales (⚙️🎮📋)
+- Un único `div` con `position: absolute; right: 2px; top: 30%` via inline styles
+- Siempre visibles; se ocultan cuando el panel de ajustes está abierto
+- Badge Tamagotchi también oculto cuando settings está abierto
 
-### Orden de implementación recomendado:
-1. Ollama (más fácil, más impacto inmediato)
-2. Multiidioma (cambio en el prompt, relativamente sencillo)
-3. Atajo de teclado (requiere plugin Tauri)
-4. Historial (nueva ventana + persistencia)
-5. No molestar (más complejo, requiere acceso a calendario)
+#### 5. Atajo de teclado global configurable
+- `tauri-plugin-global-shortcut` — por defecto `⌘+Shift+D` / `Ctrl+Shift+D`
+- Configurable en SettingsPanel: botón "Cambiar" → modo grabación → keydown
+- `globalShortcut` persistido en Zustand; re-registrado en App.tsx al arrancar
+- Flash visual "🎙️ Atajo activado" 0.8s antes de activar el micrófono
+
+---
+
+### ⏳ PENDIENTE
+
+#### 6. Modo No Molestar automático
+- Integración con el calendario del sistema (macOS EventKit / Windows Calendar)
+- Detectar reuniones activas → ocultar o minimizar el pato
+- Indicador visual `🔕` cuando está en modo no molestar
+- Toggle manual en SettingsPanel
+- Notificación cuando termina la reunión

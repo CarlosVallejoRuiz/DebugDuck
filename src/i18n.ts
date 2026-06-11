@@ -63,6 +63,12 @@ export interface T {
   gameSuggestion: string
   gameSuggestionYes: string
   gameSuggestionNo: string
+  // Shortcut
+  shortcutTitle: string
+  shortcutSubtitle: string
+  shortcutChange: string
+  shortcutRecording: string
+  shortcutDefault: string
   // useAIResponse
   errorNoServer: string
   errorNoContent: string
@@ -109,6 +115,11 @@ const es: T = {
   gameSuggestion:     'Llevas mucho tiempo trabajando... ¿jugamos? 🎮',
   gameSuggestionYes:  '¡Vamos!',
   gameSuggestionNo:   'Ahora no',
+  shortcutTitle:      '⌨️ Atajo de teclado',
+  shortcutSubtitle:   'Activa el micrófono desde cualquier app',
+  shortcutChange:     'Cambiar',
+  shortcutRecording:  'Pulsa la combinación…',
+  shortcutDefault:    'Por defecto: ⌘+Shift+D',
   errorNoServer:      'Parece que LM Studio no está corriendo. ¿Seguro que abriste el servidor local?',
   errorNoContent:     '...ni yo sé qué decir. ¿Tienes código?',
 }
@@ -154,6 +165,11 @@ const en: T = {
   gameSuggestion:     "You've been at it a while... wanna take a break? 🎮",
   gameSuggestionYes:  "Let's go!",
   gameSuggestionNo:   'Not now',
+  shortcutTitle:      '⌨️ Keyboard shortcut',
+  shortcutSubtitle:   'Activate the mic from any app',
+  shortcutChange:     'Change',
+  shortcutRecording:  'Press the combination…',
+  shortcutDefault:    'Default: ⌘+Shift+D',
   errorNoServer:      "Looks like LM Studio isn't running. Did you start the local server?",
   errorNoContent:     "...even I don't know what to say. Got any code?",
 }
@@ -199,6 +215,11 @@ const fr: T = {
   gameSuggestion:     'Tu travailles depuis un moment... on joue ? 🎮',
   gameSuggestionYes:  'Allons-y !',
   gameSuggestionNo:   'Pas maintenant',
+  shortcutTitle:      '⌨️ Raccourci clavier',
+  shortcutSubtitle:   'Active le micro depuis n\'importe quelle app',
+  shortcutChange:     'Modifier',
+  shortcutRecording:  'Appuie sur la combinaison…',
+  shortcutDefault:    'Par défaut : ⌘+Shift+D',
   errorNoServer:      "LM Studio ne semble pas actif. As-tu lancé le serveur local ?",
   errorNoContent:     "...même moi je ne sais pas quoi dire. T'as du code ?",
 }
@@ -244,6 +265,11 @@ const de: T = {
   gameSuggestion:     'Du arbeitest schon zu lange... spielen wir? 🎮',
   gameSuggestionYes:  'Los!',
   gameSuggestionNo:   'Nicht jetzt',
+  shortcutTitle:      '⌨️ Tastenkürzel',
+  shortcutSubtitle:   'Mikrofon aus jeder App aktivieren',
+  shortcutChange:     'Ändern',
+  shortcutRecording:  'Kombination drücken…',
+  shortcutDefault:    'Standard: ⌘+Shift+D',
   errorNoServer:      'LM Studio scheint nicht zu laufen. Hast du den lokalen Server gestartet?',
   errorNoContent:     '...selbst ich weiß nicht, was ich sagen soll. Hast du Code?',
 }
@@ -289,6 +315,11 @@ const pt: T = {
   gameSuggestion:     'Você está trabalhando há muito tempo... vamos jogar? 🎮',
   gameSuggestionYes:  'Vamos!',
   gameSuggestionNo:   'Agora não',
+  shortcutTitle:      '⌨️ Atalho de teclado',
+  shortcutSubtitle:   'Ativa o microfone de qualquer app',
+  shortcutChange:     'Alterar',
+  shortcutRecording:  'Pressione a combinação…',
+  shortcutDefault:    'Padrão: ⌘+Shift+D',
   errorNoServer:      'Parece que o LM Studio não está rodando. Você iniciou o servidor local?',
   errorNoContent:     '...nem eu sei o que dizer. Tem algum código?',
 }

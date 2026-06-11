@@ -1,3 +1,5 @@
+import { useState, useEffect, useCallback } from 'react'
+import { invoke } from '@tauri-apps/api/core'
 import { useWindowPosition, type Position } from '../hooks/useWindowPosition'
 import { useStore } from '../store'
 import { useTranslation, LANGUAGES } from '../i18n'
@@ -67,6 +69,51 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
   const setAiProvider          = useStore((s) => s.setAiProvider)
   const customUrl              = useStore((s) => s.customUrl)
   const setCustomUrl           = useStore((s) => s.setCustomUrl)
+  const globalShortcut         = useStore((s) => s.globalShortcut)
+  const setGlobalShortcut      = useStore((s) => s.setGlobalShortcut)
+
+  const [recordingShortcut, setRecordingShortcut] = useState(false)
+
+  // Capture the next keydown combo while in recording mode
+  const handleShortcutKeyDown = useCallback(async (e: KeyboardEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const modifiers = ['Meta', 'Control', 'Shift', 'Alt']
+    if (modifiers.includes(e.key)) return // wait for a non-modifier key
+
+    const parts: string[] = []
+    if (e.metaKey || e.ctrlKey) parts.push('CommandOrControl')
+    if (e.shiftKey)  parts.push('Shift')
+    if (e.altKey)    parts.push('Alt')
+    parts.push(e.key.toUpperCase())
+
+    if (parts.length < 2) return // require at least one modifier
+
+    const newShortcut = parts.join('+')
+    setRecordingShortcut(false)
+    try {
+      await invoke('update_global_shortcut', { oldShortcut: globalShortcut, newShortcut })
+      setGlobalShortcut(newShortcut)
+    } catch (err) {
+      console.error('Shortcut registration failed:', err)
+    }
+  }, [globalShortcut, setGlobalShortcut])
+
+  useEffect(() => {
+    if (!recordingShortcut) return
+    window.addEventListener('keydown', handleShortcutKeyDown, true)
+    return () => window.removeEventListener('keydown', handleShortcutKeyDown, true)
+  }, [recordingShortcut, handleShortcutKeyDown])
+
+  // Format the raw Tauri shortcut string for display
+  const displayShortcut = (raw: string) =>
+    raw
+      .replace('CommandOrControl', '⌘/Ctrl')
+      .replace('Command', '⌘')
+      .replace('Control', 'Ctrl')
+      .replace('Shift', '⇧')
+      .replace('Alt', '⌥')
+      .split('+').join(' + ')
 
   const handlePosition = async (pos: Position) => {
     await moveToPosition(pos)
@@ -361,6 +408,31 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Global keyboard shortcut */}
+      <div className="w-full flex flex-col gap-1.5">
+        <div>
+          <p className="text-white/70 text-[10px] font-medium">{t.shortcutTitle}</p>
+          <p className="text-white/35 text-[9px] italic">{t.shortcutSubtitle}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex-1 bg-white/10 border border-white/20 rounded-xl px-2 py-1.5 text-[10px] font-mono text-white/90 truncate">
+            {recordingShortcut ? (
+              <span className="text-yellow-400 animate-pulse">{t.shortcutRecording}</span>
+            ) : (
+              displayShortcut(globalShortcut)
+            )}
+          </div>
+          <button
+            onClick={() => setRecordingShortcut(true)}
+            disabled={recordingShortcut}
+            className="shrink-0 px-2 py-1.5 rounded-xl bg-yellow-400 hover:bg-yellow-300 disabled:opacity-50 text-black text-[9px] font-medium transition-colors"
+          >
+            {t.shortcutChange}
+          </button>
+        </div>
+        <p className="text-white/25 text-[9px]">{t.shortcutDefault}</p>
       </div>
 
       {/* Window position grid */}

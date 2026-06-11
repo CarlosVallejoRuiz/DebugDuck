@@ -4,7 +4,7 @@
 
 **Tu pato de goma con IA local. Siempre flotando. Siempre juzgándote.**
 
-[![Version](https://img.shields.io/badge/Version-v0.2.0-brightgreen?style=for-the-badge)](https://github.com/CarlosVallejoRuiz/DebugDuck/releases)
+[![Version](https://img.shields.io/badge/Version-v0.3.0-brightgreen?style=for-the-badge)](https://github.com/CarlosVallejoRuiz/DebugDuck/releases)
 [![Tauri](https://img.shields.io/badge/Tauri_v2-24C8DB?style=for-the-badge&logo=tauri&logoColor=white)](https://tauri.app)
 [![React](https://img.shields.io/badge/React_19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
@@ -30,8 +30,11 @@ Hablas. El pato piensa. El pato responde. Si lo abandonas mucho tiempo, se pone 
 ## ✨ Features
 
 - 🎙️ **Activación por voz** — doble clic en el pato para hablar, Web Speech API
-- 🧠 **IA 100% local** — conecta con LM Studio en `localhost:1234`, sin internet
+- ⌨️ **Atajo de teclado global** — `Cmd+Shift+D` / `Ctrl+Shift+D` configurable desde cualquier app
+- 🧠 **IA 100% local** — conecta con LM Studio (`:1234`) u Ollama (`:11434`), sin internet
+- 🔌 **Multi-servidor** — LM Studio, Ollama o URL personalizada con detección automática
 - 📡 **Streaming en tiempo real** — las respuestas aparecen token a token
+- 🌍 **Multiidioma** — respuestas en Español, English, Français, Deutsch o Português
 - 🎭 **Dos personalidades** — Programador (socrático) o General (opinionado)
 - 😈 **Slider de crueldad** — de mentor paciente a "pregunta obvia para cualquier senior"
 - 🥚 **Modo Tamagotchi** — el pato tiene un estado de ánimo que afecta sus respuestas
@@ -39,8 +42,9 @@ Hablas. El pato piensa. El pato responde. Si lo abandonas mucho tiempo, se pone 
 - 🎉 **Botón Eureka** — confeti fullscreen + contador de victorias
 - 🍅 **Pomodoro integrado** — timer 25min con notificación nativa
 - 💬 **Memoria de conversación** — recuerda contexto con compresión automática
+- 📋 **Historial de conversaciones** — últimas 50 sesiones persistidas, con búsqueda y copiar
 - 🖱️ **Click-through pixel-perfect** — el pato no intercepta clicks en áreas transparentes
-- 🔍 **Detección automática de modelo** — detecta qué modelo tienes cargado en LM Studio
+- 🔍 **Detección automática de modelo** — detecta qué modelo tienes cargado
 - 📐 **Posición configurable** — grid 3×3 para mover el widget a cualquier esquina
 - 🎮 **Arcade integrado** — 12 minijuegos retro terminal cuando llevas mucho tiempo trabajando
 
@@ -96,14 +100,16 @@ Después de un tiempo configurable sin jugar, el pato te sugiere un descanso con
 
 ---
 
-## 🤖 Configuración de LM Studio
+## 🤖 Configuración del servidor de IA local
 
-### a) Instalación
+DebugDuck soporta **LM Studio** y **Ollama** con detección automática al arrancar. También acepta una URL personalizada para servidores corporativos.
+
+### Opción A — LM Studio
 
 1. Descarga [LM Studio](https://lmstudio.ai) e instálalo
 2. Ábrelo y ve a la pestaña **Discover** para buscar modelos
 
-### b) Modelos recomendados
+#### Modelos recomendados
 
 | Modelo | VRAM / RAM | Notas |
 |--------|-----------|-------|
@@ -113,19 +119,30 @@ Después de un tiempo configurable sin jugar, el pato te sugiere un descanso con
 | `meta-llama/Llama-3.1-8B-Instruct` | ~7 GB | Sólido para preguntas técnicas |
 | `google/gemma-2-9b-it` | ~9 GB | Excelente para código |
 
-> ⚠️ **Evita modelos "thinking"** (Qwen3, DeepSeek-R1, nombres con `reasoning`). Usan tokens extra en razonamiento interno y ralentizan las respuestas. DebugDuck los soporta, pero la experiencia es peor.
-
-### c) Activar el servidor local
+> ⚠️ **Evita modelos "thinking"** (Qwen3, DeepSeek-R1, nombres con `reasoning`). DebugDuck los soporta, pero la experiencia es peor.
 
 1. Abre la pestaña **Local Server** en LM Studio
 2. Selecciona un modelo y pulsa **Load Model**
 3. Activa el toggle **Status** → debe mostrar `Running on port 1234`
 
-### d) Conectar con DebugDuck
+### Opción B — Ollama
 
-El pato detecta automáticamente el modelo activo al arrancar. Para cambiar de modelo en caliente:
-- Abre ajustes ⚙️ → **Modelo activo** muestra el modelo detectado
-- Pulsa **↺** para refrescar la detección
+```bash
+# Instalar Ollama
+brew install ollama
+
+# Descargar y arrancar un modelo
+ollama run llama3.2
+```
+
+Ollama corre en `localhost:11434` por defecto. DebugDuck lo detecta automáticamente.
+
+### Conectar con DebugDuck
+
+El pato detecta automáticamente qué servidor está activo al arrancar (primero LM Studio, luego Ollama). El indicador en ajustes muestra 🟢 Conectado o 🔴 Sin conexión.
+
+- Abre ajustes ⚙️ → **Proveedor IA** → selecciona LM Studio / Ollama / Custom
+- **Modelo activo** muestra el modelo detectado → pulsa **↺** para refrescar
 
 ---
 
@@ -177,14 +194,25 @@ open src-tauri/target/debug/bundle/macos/DebugDuck.app
 | **Pomo** | Inicia timer Pomodoro de 25 min 🍅 |
 | **Doble clic** (con bocadillo abierto) | Cierra y vuelve a idle |
 
+### Atajo de teclado global
+
+Activa el micrófono desde cualquier app sin tocar el pato:
+
+- **Por defecto:** `Cmd+Shift+D` (Mac) / `Ctrl+Shift+D` (Windows)
+- **Para cambiar:** Ajustes ⚙️ → sección `⌨️ Atajo de teclado` → clic en **Cambiar** → pulsa la combinación deseada
+- El pato muestra un flash "🎙️ Atajo activado" 0.8s antes de activar el micrófono
+
 ### Ajustes ⚙️
 
-Hover sobre el pato → aparece el engranaje → clic para abrir ajustes:
+Clic en el botón ⚙️ a la derecha del pato para abrir ajustes:
 
 - **Personalidad** — `🦆 Programador` (modo socrático, no da soluciones directas) o `🌍 General` (habla de cualquier tema)
+- **Proveedor IA** — selector LM Studio / Ollama / Custom URL con indicador de conexión
+- **Idioma** — Español / English / Français / Deutsch / Português
 - **Modo Tamagotchi** — activa el sistema de estado de ánimo
 - **Slider de crueldad** — solo visible cuando Tamagotchi está desactivado
 - **Memoria** — el pato recuerda hasta 4 mensajes + resumen comprimido
+- **Atajo de teclado** — configura el shortcut global
 - **Minijuegos** — toggle ON/OFF + selector de frecuencia `[15m] [25m] [45m] [60m]` + timer de cuenta atrás
 - **Posición** — grid 3×3 para mover el widget
 
@@ -253,29 +281,19 @@ src/hooks/
 
 ## 🗺️ Roadmap v0.3.0
 
-Las próximas features planificadas, en orden de implementación:
+### ✅ Implementado en v0.3.0
 
-### 1. 🔌 Compatibilidad con Ollama
-- Detección automática de servidor activo (LM Studio en `:1234` u Ollama en `:11434`)
-- Selector en Ajustes: **LM Studio / Ollama / Custom URL**
-- Soporte para URLs corporativas personalizadas
+| Feature | Descripción |
+|---------|-------------|
+| 🔌 **Ollama + URL personalizada** | Detección automática LM Studio/Ollama, selector en Ajustes, soporte URL custom |
+| 🌍 **Multiidioma** | Respuestas en ES/EN/FR/DE/PT, UI traducida, idioma persistido en Zustand |
+| ⌨️ **Atajo de teclado global** | `Cmd+Shift+D` configurable, funciona desde cualquier app del sistema |
+| 📋 **Historial de conversaciones** | Últimas 50 sesiones persistidas, búsqueda, copiar, borrar; ventana dedicada |
+| 🎮 **Botones verticales** | ⚙️🎮📋 apilados a la derecha del pato, se ocultan con el panel de ajustes |
 
-### 2. 🌍 Soporte multiidioma
-- Selector de idioma en Ajustes: Español, English, Français, Deutsch, Português
-- El idioma se inyecta en el system prompt y persiste entre sesiones
-- Los textos de la UI también se adaptan al idioma seleccionado
+### ⏳ Pendiente en v0.4.0
 
-### 3. ⌨️ Atajo de teclado global
-- Activar el micrófono sin hacer doble clic en el pato
-- Por defecto: `Cmd+Shift+D` (Mac) / `Ctrl+Shift+D` (Win)
-- Configurable por el usuario — implementado con `tauri-plugin-global-shortcut`
-
-### 4. 📋 Historial de conversaciones
-- Últimas 50 preguntas y respuestas, persistidas entre sesiones
-- Ventana dedicada con búsqueda por texto, copiar y borrar entradas
-- Accesible desde un botón 📋 en el widget
-
-### 5. 🔕 Modo No Molestar automático
+### 🔕 Modo No Molestar automático
 - Detecta reuniones activas en el calendario del sistema (macOS/Windows)
 - El pato se oculta o minimiza durante reuniones
 - Indicador visual `🔕` y toggle manual en Ajustes

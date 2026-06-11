@@ -25,6 +25,7 @@ tauri = { version = "2.11.2", features = ["macos-private-api"] }
 tauri-plugin-log = "2"
 tauri-plugin-notification = "2"
 tauri-plugin-http = "2"
+tauri-plugin-global-shortcut = "2"
 reqwest = { version = "0.12", features = ["json", "stream"] }
 embed_plist = "1.2"
 
