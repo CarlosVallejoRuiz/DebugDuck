@@ -309,3 +309,64 @@ open src-tauri/target/debug/bundle/macos/DebugDuck.app
 - `src/components/SettingsPanel.tsx` — toggle minijuegos
 - `src/App.tsx` — botón 🎮 + lógica de sugerencia automática
 - `src/store.ts` — gamesEnabled: boolean (default: true)
+
+## 15. ROADMAP v0.3.0 — Features pendientes
+
+### 1. Compatibilidad con Ollama
+- Ollama usa por defecto http://localhost:11434
+- API compatible con OpenAI: /api/chat o /v1/chat/completions
+- En useAIResponse.ts detectar automáticamente qué 
+  servidor está activo (LM Studio en 1234 u Ollama en 11434)
+- En SettingsPanel añadir selector: LM Studio / Ollama / Custom URL
+- Permitir URL personalizada para servidores corporativos
+- La detección debe ser automática al arrancar
+
+### 2. Soporte multiidioma en respuestas del pato
+- Selector de idioma en SettingsPanel
+- Idiomas: Español, English, Français, Deutsch, Português
+- El idioma seleccionado se inyecta en el system prompt:
+  "Responde SIEMPRE en [idioma]"
+- Persistido en Zustand
+- El pato responde en el idioma del usuario
+- Los mensajes de la UI (bocadillo, ajustes) también 
+  se traducen según el idioma seleccionado
+
+### 3. Atajo de teclado global
+- Activar micrófono sin hacer doble clic en el pato
+- Atajo por defecto: Cmd+Shift+D (Mac) / Ctrl+Shift+D (Win)
+- Configurable por el usuario en SettingsPanel
+- Implementar con plugin de Tauri para shortcuts globales:
+  tauri-plugin-global-shortcut
+- El atajo funciona desde cualquier app del sistema
+- Al activarse: el pato hace la animación de listening
+
+### 4. Historial de conversaciones
+- Guardar las últimas 50 preguntas y respuestas
+- Persistido en Zustand (survives between sessions)
+- Accesible desde un botón 📋 en el widget
+- Se abre en una ventana nueva (igual que los juegos)
+- Muestra: timestamp, pregunta, respuesta
+- Opciones: copiar respuesta, borrar entrada, borrar todo
+- Estilo coherente con la app (fondo claro, 
+  no retro terminal — es funcional no de juego)
+- Búsqueda por texto dentro del historial
+
+### 5. Modo No Molestar automático
+- Integración con el calendario del sistema
+- Detectar reuniones activas via:
+  * macOS: leer calendarios con plugin Tauri
+  * Windows: integración con calendario de Windows
+- Cuando hay reunión activa:
+  * El pato se oculta automáticamente
+  * O se minimiza a un icono muy pequeño
+  * No responde a doble clic ni atajos
+- Indicador visual cuando está en modo no molestar: 🔕
+- Toggle manual en SettingsPanel para forzar activar/desactivar
+- Notificación cuando termina la reunión y el pato vuelve
+
+### Orden de implementación recomendado:
+1. Ollama (más fácil, más impacto inmediato)
+2. Multiidioma (cambio en el prompt, relativamente sencillo)
+3. Atajo de teclado (requiere plugin Tauri)
+4. Historial (nueva ventana + persistencia)
+5. No molestar (más complejo, requiere acceso a calendario)
