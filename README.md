@@ -251,15 +251,46 @@ src/hooks/
 
 ---
 
-## 🗺️ Roadmap
+## 🗺️ Roadmap v0.3.0
 
-- [ ] Build para Windows (ajustar transparencia y permisos)
-- [ ] Soporte para Ollama como backend alternativo a LM Studio
-- [ ] Historial de conversaciones persistente entre sesiones
-- [ ] Modo multi-pato (más de un widget)
-- [ ] Temas visuales para el pato
-- [ ] Export de la conversación como Markdown
-- [ ] Atajos de teclado globales para activar el micrófono
+Las próximas features planificadas, en orden de implementación:
+
+### 1. 🔌 Compatibilidad con Ollama
+- Detección automática de servidor activo (LM Studio en `:1234` u Ollama en `:11434`)
+- Selector en Ajustes: **LM Studio / Ollama / Custom URL**
+- Soporte para URLs corporativas personalizadas
+
+### 2. 🌍 Soporte multiidioma
+- Selector de idioma en Ajustes: Español, English, Français, Deutsch, Português
+- El idioma se inyecta en el system prompt y persiste entre sesiones
+- Los textos de la UI también se adaptan al idioma seleccionado
+
+### 3. ⌨️ Atajo de teclado global
+- Activar el micrófono sin hacer doble clic en el pato
+- Por defecto: `Cmd+Shift+D` (Mac) / `Ctrl+Shift+D` (Win)
+- Configurable por el usuario — implementado con `tauri-plugin-global-shortcut`
+
+### 4. 📋 Historial de conversaciones
+- Últimas 50 preguntas y respuestas, persistidas entre sesiones
+- Ventana dedicada con búsqueda por texto, copiar y borrar entradas
+- Accesible desde un botón 📋 en el widget
+
+### 5. 🔕 Modo No Molestar automático
+- Detecta reuniones activas en el calendario del sistema (macOS/Windows)
+- El pato se oculta o minimiza durante reuniones
+- Indicador visual `🔕` y toggle manual en Ajustes
+
+---
+
+## 🤝 Contribuir
+
+¿Quieres implementar alguna feature del roadmap o tienes ideas nuevas?
+
+1. Haz fork del repositorio
+2. Crea una rama: `git checkout -b feat/nombre-feature`
+3. Abre un Pull Request describiendo el cambio
+
+Cualquier PR es bienvenido: nuevas features, bug fixes, mejoras de rendimiento, traducciones o documentación.
 
 ---
 
