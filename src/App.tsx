@@ -12,6 +12,7 @@ import { usePomodoro } from './hooks/usePomodoro'
 import { useTamagotchi } from './hooks/useTamagotchi'
 import { useWindowPosition, type Position } from './hooks/useWindowPosition'
 import { useStore } from './store'
+import { useTranslation } from './i18n'
 
 const DEBUG_BUBBLE = false
 const mockTranscript = ''
@@ -30,20 +31,23 @@ function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [dismissed, setDismissed] = useState(false)
   const [showGameSuggestion, setShowGameSuggestion] = useState(false)
-  const { aiResponse, isThinking, fetchResponse, clearResponse, detectedModel, refreshModel } = useAIResponse()
+  const { aiResponse, isThinking, fetchResponse, clearResponse, detectedModel, refreshModel, providerStatus, autoDetect } = useAIResponse()
   const tamagotchi = useTamagotchi()
   const isTopPosition    = useStore((s) => s.isTopPosition)
   const lastPosition     = useStore((s) => s.lastPosition)
   const setDuckHappiness = useStore((s) => s.setDuckHappiness)
 
+  const t = useTranslation()
   const { moveToPosition } = useWindowPosition()
 
   // Restore saved window position on startup using the same logic as the manual grid.
   useEffect(() => {
     moveToPosition(lastPosition as Position)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-  const incrementEurekas  = useStore((s) => s.incrementEurekas)
-  const gamesEnabled      = useStore((s) => s.gamesEnabled)
+  const incrementEurekas    = useStore((s) => s.incrementEurekas)
+  const deleteHistoryItem   = useStore((s) => s.deleteHistoryItem)
+  const clearHistory        = useStore((s) => s.clearHistory)
+  const gamesEnabled        = useStore((s) => s.gamesEnabled)
   const gamesInterval     = useStore((s) => s.gamesInterval)
   const personalityMode   = useStore((s) => s.personalityMode)
 
@@ -128,6 +132,10 @@ function App() {
     clearResponse()
   }, [startPomodoro, reset, clearResponse])
 
+  const handleHistoryOpen = useCallback(async () => {
+    try { await invoke('launch_history_window') } catch (e) { console.error(e) }
+  }, [])
+
   const handleGamesOpen = useCallback(async () => {
     try {
       await invoke('launch_games_window', { personalityMode })
@@ -153,6 +161,22 @@ function App() {
     }
     return () => { stopGamesTimer(false) }
   }, [gamesEnabled, gamesInterval, startGamesTimer, stopGamesTimer])
+
+  // Listen for history mutations from the history.html window.
+  useEffect(() => {
+    let unlistenDelete: (() => void) | undefined
+    let unlistenClear:  (() => void) | undefined
+
+    listen<{ id: string }>('history-delete', (e) => {
+      deleteHistoryItem(e.payload.id)
+    }).then(fn => { unlistenDelete = fn })
+
+    listen('history-clear', () => {
+      clearHistory()
+    }).then(fn => { unlistenClear = fn })
+
+    return () => { unlistenDelete?.(); unlistenClear?.() }
+  }, [deleteHistoryItem, clearHistory])
 
   // Listen for game-result events: update happiness, reset timer, close tracking.
   useEffect(() => {
@@ -215,6 +239,13 @@ function App() {
       const gamesBtn = document.querySelector('[data-games-btn]')
       if (gamesBtn) {
         const r = gamesBtn.getBoundingClientRect()
+        if (winX >= r.left && winX <= r.right && winY >= r.top && winY <= r.bottom) return false
+      }
+
+      // Keep history button interactive.
+      const historyBtn = document.querySelector('[data-history-btn]')
+      if (historyBtn) {
+        const r = historyBtn.getBoundingClientRect()
         if (winX >= r.left && winX <= r.right && winY >= r.top && winY <= r.bottom) return false
       }
 
@@ -311,7 +342,7 @@ function App() {
           <div className="w-full flex flex-col items-center gap-2 px-3">
             <div className="bg-white rounded-2xl shadow-xl border border-gray-200 px-4 py-3 max-w-[185px] text-center">
               <p className="text-[11px] text-gray-700 leading-snug">
-                Llevas mucho tiempo trabajando... ¿jugamos? 🎮
+                {t.gameSuggestion}
               </p>
             </div>
             <div className="flex gap-2">
@@ -319,13 +350,13 @@ function App() {
                 onClick={handleGameSuggestionAccept}
                 className="px-3 py-1.5 bg-purple-500 hover:bg-purple-400 text-white text-[11px] rounded-full font-medium transition-colors shadow"
               >
-                ¡Vamos!
+                {t.gameSuggestionYes}
               </button>
               <button
                 onClick={() => { setShowGameSuggestion(false); startGamesTimer() }}
                 className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-[11px] rounded-full font-medium transition-colors shadow"
               >
-                Ahora no
+                {t.gameSuggestionNo}
               </button>
             </div>
           </div>
@@ -341,6 +372,8 @@ function App() {
             refreshModel={refreshModel}
             gamesTimeLeft={gamesTimeLeft}
             gamesWindowOpen={gamesWindowOpen}
+            providerStatus={providerStatus}
+            autoDetect={autoDetect}
           />
         </div>
       )}
@@ -370,7 +403,9 @@ function App() {
             onDoubleClick={handleDoubleClick}
             onSettingsOpen={() => setShowSettings(true)}
             onGamesOpen={handleGamesOpen}
+            onHistoryOpen={handleHistoryOpen}
             isGaming={gamesWindowOpen}
+            showSettings={showSettings}
           />
         </div>
       </div>

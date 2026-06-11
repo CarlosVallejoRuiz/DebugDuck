@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DebugDuck — Historial</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    background: #f5f5f5;
+    color: #1a1a1a;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ─────────────────────────────── */
+  header {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 14px 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  header h1 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFD700;
+    flex: 1;
+  }
+  .btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-size: 12px;
+    transition: background 0.15s;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .btn-icon:hover { background: rgba(255,255,255,0.12); }
+  .btn-clear { color: #ff6b6b; font-size: 11px; font-weight: 500; }
+  .btn-refresh { font-size: 14px; }
+
+  /* ── SEARCH ─────────────────────────────── */
+  .search-wrap {
+    padding: 10px 12px 8px;
+    background: #fff;
+    border-bottom: 1px solid #e8e8e8;
+    flex-shrink: 0;
+  }
+  .search-input {
+    width: 100%;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 7px 12px 7px 32px;
+    font-size: 12px;
+    outline: none;
+    background: #f8f8f8 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center;
+    transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: #FFD700; background-color: #fff; }
+
+  /* ── LIST ───────────────────────────────── */
+  #list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  #list::-webkit-scrollbar { width: 5px; }
+  #list::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 4px; }
+
+  /* ── CARD ───────────────────────────────── */
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #ebebeb;
+    padding: 12px 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    transition: box-shadow 0.15s;
+  }
+  .card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+  .card-time  { font-size: 10px; color: #999; font-weight: 500; white-space: nowrap; }
+  .card-model {
+    font-size: 9px; color: #bbb;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    max-width: 160px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; text-align: right;
+  }
+
+  .card-question {
+    font-size: 12px; font-weight: 500; color: #333;
+    margin-bottom: 6px; line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .card-question::before { content: '❓ '; font-size: 11px; }
+
+  .card-answer {
+    font-size: 11.5px; color: #555; line-height: 1.5;
+    display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .card-answer.collapsed { -webkit-line-clamp: 3; }
+  .card-answer.expanded  { -webkit-line-clamp: unset; }
+  .card-answer::before   { content: '💬 '; font-size: 11px; }
+
+  .btn-expand {
+    background: none; border: none; cursor: pointer;
+    font-size: 10px; color: #FFD700; font-weight: 600;
+    padding: 2px 0; margin-top: 3px; display: block;
+    transition: color 0.15s;
+  }
+  .btn-expand:hover { color: #e6c000; }
+
+  .card-footer {
+    display: flex; justify-content: flex-end; gap: 6px;
+    margin-top: 10px; padding-top: 8px; border-top: 1px solid #f0f0f0;
+  }
+  .btn-footer {
+    background: #f5f5f5; border: 1px solid #e8e8e8;
+    border-radius: 7px; padding: 4px 10px;
+    font-size: 10px; cursor: pointer; color: #555;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .btn-footer:hover { background: #ebebeb; }
+  .btn-footer.delete:hover { background: #fff0f0; color: #e53e3e; border-color: #fcc; }
+  .btn-footer.copy.done { background: #f0fff4; color: #38a169; border-color: #9ae6b4; }
+
+  /* ── EMPTY STATE ────────────────────────── */
+  #empty {
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 10px; padding: 60px 24px; text-align: center; color: #aaa;
+  }
+  #empty .duck       { font-size: 40px; }
+  #empty .empty-title { font-size: 14px; font-weight: 600; color: #888; }
+  #empty .empty-hint  { font-size: 12px; color: #bbb; line-height: 1.5; }
+  #no-results { display: none; text-align: center; padding: 30px; font-size: 12px; color: #bbb; }
+
+  /* ── CUSTOM CONFIRM MODAL ───────────────── */
+  #confirm-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  #confirm-overlay.visible { display: flex; }
+
+  #confirm-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 24px 20px;
+    max-width: 320px; width: 90%;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    text-align: center;
+  }
+  #confirm-box .icon   { font-size: 28px; margin-bottom: 10px; }
+  #confirm-box .title  { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
+  #confirm-box .desc   { font-size: 12px; color: #666; line-height: 1.55; margin-bottom: 20px; }
+  #confirm-box .btns   { display: flex; gap: 10px; }
+  #confirm-box .btn-cancel {
+    flex: 1; padding: 9px; border: 1.5px solid #e0e0e0;
+    border-radius: 10px; background: #f5f5f5; cursor: pointer;
+    font-size: 12px; font-weight: 500; color: #555;
+    transition: background 0.15s;
+  }
+  #confirm-box .btn-cancel:hover { background: #ebebeb; }
+  #confirm-box .btn-confirm-del {
+    flex: 1; padding: 9px; border: none;
+    border-radius: 10px; background: #e53e3e; cursor: pointer;
+    font-size: 12px; font-weight: 600; color: #fff;
+    transition: background 0.15s;
+  }
+  #confirm-box .btn-confirm-del:hover { background: #c53030; }
+</style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:18px">🦆</span>
+  <h1 id="title-el">Historial de conversaciones</h1>
+  <button class="btn-icon btn-refresh" id="btn-refresh" title="Actualizar">↺</button>
+  <button class="btn-icon btn-clear"   id="btn-clear">🗑 Borrar todo</button>
+</header>
+
+<div class="search-wrap">
+  <input class="search-input" id="search" type="text" placeholder="Buscar en el historial…">
+</div>
+
+<div id="list">
+  <div id="empty">
+    <span class="duck">🦆</span>
+    <p class="empty-title" id="empty-title">Aún no hay conversaciones.</p>
+    <p class="empty-hint"  id="empty-hint">Pregúntale algo al pato y vuelve.</p>
+  </div>
+  <div id="no-results">Sin resultados.</div>
+</div>
+
+<!-- Custom confirmation modal (replaces confirm() which WKWebView blocks) -->
+<div id="confirm-overlay">
+  <div id="confirm-box">
+    <div class="icon">🗑️</div>
+    <p class="title"  id="modal-title">Borrar historial</p>
+    <p class="desc"   id="modal-desc">¿Seguro que quieres borrar todo el historial?<br>Esta acción no se puede deshacer.</p>
+    <div class="btns">
+      <button class="btn-cancel"      id="modal-cancel">Cancelar</button>
+      <button class="btn-confirm-del" id="modal-confirm">Borrar todo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Translations ──────────────────────────────────────────────
+const I18N = {
+  es: {
+    title:          'Historial de conversaciones',
+    search:         'Buscar en el historial…',
+    clearAll:       '🗑 Borrar todo',
+    modalTitle:     'Borrar historial',
+    modalDesc:      '¿Seguro que quieres borrar todo el historial?\nEsta acción no se puede deshacer.',
+    modalCancel:    'Cancelar',
+    modalConfirm:   'Borrar todo',
+    emptyTitle:     'Aún no hay conversaciones.',
+    emptyHint:      'Pregúntale algo al pato y vuelve.',
+    noResults:      'Sin resultados.',
+    copy:           '📋 Copiar',
+    copied:         '¡Copiado!',
+    del:            '🗑',
+    expand:         'ver más ▾',
+    collapse:       'ver menos ▴',
+    refresh:        'Actualizar',
+    today:          'Hoy',
+    yesterday:      'Ayer',
+    days:           ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],
+  },
+  en: {
+    title:          'Conversation history',
+    search:         'Search history…',
+    clearAll:       '🗑 Clear all',
+    modalTitle:     'Clear history',
+    modalDesc:      'Are you sure you want to clear all history?\nThis action cannot be undone.',
+    modalCancel:    'Cancel',
+    modalConfirm:   'Clear all',
+    emptyTitle:     'No conversations yet.',
+    emptyHint:      'Ask the duck something and come back.',
+    noResults:      'No results.',
+    copy:           '📋 Copy',
+    copied:         'Copied!',
+    del:            '🗑',
+    expand:         'show more ▾',
+    collapse:       'show less ▴',
+    refresh:        'Refresh',
+    today:          'Today',
+    yesterday:      'Yesterday',
+    days:           ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+  },
+  fr: {
+    title:          'Historique des conversations',
+    search:         "Rechercher dans l'historique…",
+    clearAll:       '🗑 Tout effacer',
+    modalTitle:     "Effacer l'historique",
+    modalDesc:      "Effacer tout l'historique ?\nCette action est irréversible.",
+    modalCancel:    'Annuler',
+    modalConfirm:   'Tout effacer',
+    emptyTitle:     'Pas encore de conversations.',
+    emptyHint:      'Posez une question au canard et revenez.',
+    noResults:      'Aucun résultat.',
+    copy:           '📋 Copier',
+    copied:         'Copié !',
+    del:            '🗑',
+    expand:         'voir plus ▾',
+    collapse:       'voir moins ▴',
+    refresh:        'Actualiser',
+    today:          "Aujourd'hui",
+    yesterday:      'Hier',
+    days:           ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'],
+  },
+  de: {
+    title:          'Gesprächshistorie',
+    search:         'Verlauf durchsuchen…',
+    clearAll:       '🗑 Alles löschen',
+    modalTitle:     'Verlauf löschen',
+    modalDesc:      'Gesamten Verlauf löschen?\nDiese Aktion kann nicht rückgängig gemacht werden.',
+    modalCancel:    'Abbrechen',
+    modalConfirm:   'Alles löschen',
+    emptyTitle:     'Noch keine Gespräche.',
+    emptyHint:      'Frag die Ente etwas und komm wieder.',
+    noResults:      'Keine Ergebnisse.',
+    copy:           '📋 Kopieren',
+    copied:         'Kopiert!',
+    del:            '🗑',
+    expand:         'mehr anzeigen ▾',
+    collapse:       'weniger ▴',
+    refresh:        'Aktualisieren',
+    today:          'Heute',
+    yesterday:      'Gestern',
+    days:           ['So','Mo','Di','Mi','Do','Fr','Sa'],
+  },
+  pt: {
+    title:          'Histórico de conversas',
+    search:         'Pesquisar no histórico…',
+    clearAll:       '🗑 Apagar tudo',
+    modalTitle:     'Apagar histórico',
+    modalDesc:      'Apagar todo o histórico?\nEsta ação não pode ser desfeita.',
+    modalCancel:    'Cancelar',
+    modalConfirm:   'Apagar tudo',
+    emptyTitle:     'Ainda não há conversas.',
+    emptyHint:      'Pergunte algo ao pato e volte.',
+    noResults:      'Sem resultados.',
+    copy:           '📋 Copiar',
+    copied:         'Copiado!',
+    del:            '🗑',
+    expand:         'ver mais ▾',
+    collapse:       'ver menos ▴',
+    refresh:        'Atualizar',
+    today:          'Hoje',
+    yesterday:      'Ontem',
+    days:           ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'],
+  },
+}
+
+const STORAGE_KEY = 'debugduck-storage'
+
+// ── Read/write helpers ────────────────────────────────────────
+function readStore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return { items: [], lang: 'es' }
+    const s = JSON.parse(raw)?.state ?? {}
+    return {
+      items: Array.isArray(s.historyLog) ? s.historyLog : [],
+      lang:  s.responseLanguage || 'es',
+    }
+  } catch { return { items: [], lang: 'es' } }
+}
+
+function writeHistoryLog(newItems) {
+  try {
+    const raw     = localStorage.getItem(STORAGE_KEY) || '{}'
+    const storage = JSON.parse(raw)
+    if (!storage.state) storage.state = {}
+    storage.state.historyLog = newItems
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storage))
+  } catch(e) { console.error('localStorage write failed', e) }
+}
+
+function deleteItemFromStorage(id) {
+  try {
+    const raw     = localStorage.getItem(STORAGE_KEY) || '{}'
+    const storage = JSON.parse(raw)
+    if (!storage.state) return
+    storage.state.historyLog = (storage.state.historyLog || []).filter(i => i.id !== id)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storage))
+  } catch(e) { console.error('localStorage write failed', e) }
+}
+
+// ── Tauri event emission ──────────────────────────────────────
+// Uses __TAURI_INTERNALS__ (available in Tauri v2 without withGlobalTauri).
+// Falls back silently in browser/dev context.
+async function tauriEmit(event, payload) {
+  try {
+    if (window.__TAURI_INTERNALS__) {
+      await window.__TAURI_INTERNALS__.invoke('plugin:event|emit', {
+        event,
+        target: { kind: 'Any' },
+        payload,
+      })
+    }
+  } catch(e) { console.warn('tauriEmit failed:', event, e) }
+}
+
+// ── Init ──────────────────────────────────────────────────────
+let { items: historyItems, lang } = readStore()
+const t = I18N[lang] || I18N.es
+
+// Apply translations
+document.documentElement.lang = lang
+document.getElementById('title-el').textContent     = t.title
+document.getElementById('btn-clear').textContent    = t.clearAll
+document.getElementById('btn-refresh').title        = t.refresh
+document.getElementById('search').placeholder       = t.search
+document.getElementById('empty-title').textContent  = t.emptyTitle
+document.getElementById('empty-hint').textContent   = t.emptyHint
+document.getElementById('no-results').textContent   = t.noResults
+document.getElementById('modal-title').textContent  = t.modalTitle
+document.getElementById('modal-desc').textContent   = t.modalDesc
+document.getElementById('modal-cancel').textContent = t.modalCancel
+document.getElementById('modal-confirm').textContent = t.modalConfirm
+
+// ── Date formatting ───────────────────────────────────────────
+function startOfDay(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+}
+function formatDate(ts) {
+  const date      = new Date(ts)
+  const now       = new Date()
+  const today     = +startOfDay(now)
+  const yesterday = today - 86400000
+  const itemDay   = +startOfDay(date)
+  const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+  if (itemDay === today)     return `${t.today} ${time}`
+  if (itemDay === yesterday) return `${t.yesterday} ${time}`
+  if (today - itemDay < 7 * 86400000) return `${t.days[date.getDay()]} ${time}`
+
+  const d2 = String(date.getDate()).padStart(2, '0')
+  const m2 = String(date.getMonth() + 1).padStart(2, '0')
+  return `${d2}/${m2}/${date.getFullYear()} ${time}`
+}
+
+// ── Render ────────────────────────────────────────────────────
+const listEl   = document.getElementById('list')
+const emptyEl  = document.getElementById('empty')
+const noResEl  = document.getElementById('no-results')
+const searchEl = document.getElementById('search')
+
+function buildCard(item) {
+  const card = document.createElement('div')
+  card.className   = 'card'
+  card.dataset.id  = item.id
+
+  const hdr = document.createElement('div')
+  hdr.className = 'card-header'
+  const timeEl  = document.createElement('span')
+  timeEl.className = 'card-time'
+  timeEl.textContent = formatDate(item.timestamp)
+  const modelEl = document.createElement('span')
+  modelEl.className  = 'card-model'
+  modelEl.textContent = item.model || '—'
+  hdr.append(timeEl, modelEl)
+
+  const qEl = document.createElement('p')
+  qEl.className   = 'card-question'
+  qEl.textContent = item.question
+
+  const aEl = document.createElement('p')
+  aEl.className   = 'card-answer collapsed'
+  aEl.textContent = item.answer
+
+  const expandBtn = document.createElement('button')
+  expandBtn.className   = 'btn-expand'
+  expandBtn.textContent = t.expand
+  let expanded = false
+  expandBtn.addEventListener('click', () => {
+    expanded = !expanded
+    aEl.className = expanded ? 'card-answer expanded' : 'card-answer collapsed'
+    expandBtn.textContent = expanded ? t.collapse : t.expand
+  })
+
+  const footer = document.createElement('div')
+  footer.className = 'card-footer'
+
+  const copyBtn = document.createElement('button')
+  copyBtn.className   = 'btn-footer copy'
+  copyBtn.textContent = t.copy
+  copyBtn.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(item.answer) } catch {}
+    copyBtn.textContent = t.copied
+    copyBtn.classList.add('done')
+    setTimeout(() => { copyBtn.textContent = t.copy; copyBtn.classList.remove('done') }, 1800)
+  })
+
+  const delBtn = document.createElement('button')
+  delBtn.className   = 'btn-footer delete'
+  delBtn.textContent = t.del
+  delBtn.addEventListener('click', async () => {
+    // 1. Update localStorage immediately
+    deleteItemFromStorage(item.id)
+    // 2. Notify main window to sync its Zustand store
+    await tauriEmit('history-delete', { id: item.id })
+    // 3. Update local array and DOM
+    historyItems = historyItems.filter(i => i.id !== item.id)
+    card.remove()
+    checkEmpty()
+  })
+
+  footer.append(copyBtn, delBtn)
+  card.append(hdr, qEl, aEl, expandBtn, footer)
+  return card
+}
+
+function checkEmpty() {
+  const cards = listEl.querySelectorAll('.card')
+  emptyEl.style.display  = cards.length === 0 ? 'flex' : 'none'
+  noResEl.style.display  = 'none'
+}
+
+function render(items) {
+  listEl.querySelectorAll('.card').forEach(c => c.remove())
+  noResEl.style.display = 'none'
+
+  if (!items || items.length === 0) {
+    emptyEl.style.display = 'flex'
+    return
+  }
+  emptyEl.style.display = 'none'
+  items.forEach(item => listEl.appendChild(buildCard(item)))
+}
+
+render(historyItems)
+
+// ── Search ────────────────────────────────────────────────────
+searchEl.addEventListener('input', () => {
+  const q = searchEl.value.trim().toLowerCase()
+  if (!q) { render(historyItems); return }
+  const filtered = historyItems.filter(i =>
+    i.question.toLowerCase().includes(q) || i.answer.toLowerCase().includes(q)
+  )
+  render(filtered)
+  if (filtered.length === 0) {
+    emptyEl.style.display = 'none'
+    noResEl.style.display = 'block'
+  }
+})
+
+// ── Refresh ───────────────────────────────────────────────────
+document.getElementById('btn-refresh').addEventListener('click', () => {
+  const { items, lang: newLang } = readStore()
+  historyItems = items
+  if (newLang !== lang) location.reload()
+  else { render(historyItems); searchEl.value = '' }
+})
+
+// ── Clear all — custom modal ──────────────────────────────────
+const overlay     = document.getElementById('confirm-overlay')
+const modalCancel = document.getElementById('modal-cancel')
+const modalOk     = document.getElementById('modal-confirm')
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  // Show custom modal instead of confirm() — WKWebView blocks native dialogs on macOS
+  overlay.classList.add('visible')
+  modalOk.focus()
+})
+
+modalCancel.addEventListener('click', () => {
+  overlay.classList.remove('visible')
+})
+
+// Close modal on overlay click (outside the box)
+overlay.addEventListener('click', (e) => {
+  if (e.target === overlay) overlay.classList.remove('visible')
+})
+
+modalOk.addEventListener('click', async () => {
+  overlay.classList.remove('visible')
+
+  // 1. Write empty historyLog directly to localStorage
+  writeHistoryLog([])
+
+  // 2. Notify main window to sync its Zustand store
+  await tauriEmit('history-clear', {})
+
+  // 3. Update local state and re-render
+  historyItems = []
+  render([])
+  searchEl.value = ''
+})
+</script>
+</body>
+</html>

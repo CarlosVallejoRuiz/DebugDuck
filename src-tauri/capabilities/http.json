@@ -1,14 +1,16 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "http-localhost",
-  "description": "Allow HTTP requests to LM Studio on localhost",
-  "windows": ["main"],
+  "description": "Allow HTTP requests to local AI servers (LM Studio port 1234, Ollama port 11434)",
+  "windows": ["main", "games", "history"],
   "permissions": [
     {
       "identifier": "http:allow-fetch",
       "allow": [
         { "url": "http://localhost:1234/**" },
-        { "url": "http://127.0.0.1:1234/**" }
+        { "url": "http://127.0.0.1:1234/**" },
+        { "url": "http://localhost:11434/**" },
+        { "url": "http://127.0.0.1:11434/**" }
       ]
     },
     "http:allow-fetch-send",

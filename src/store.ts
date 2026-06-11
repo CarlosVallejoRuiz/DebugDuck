@@ -5,6 +5,14 @@ type PersonalityMode = 'programmer' | 'general'
 
 export type HistoryEntry = { role: 'user' | 'assistant'; content: string }
 
+export type HistoryItem = {
+  id: string
+  timestamp: number
+  question: string
+  answer: string
+  model: string
+}
+
 interface AppState {
   // ── persisted ──────────────────────────────────────────────
   aiModel: string
@@ -20,6 +28,11 @@ interface AppState {
   lastPosition: string
   gamesEnabled: boolean
   gamesInterval: number
+  responseLanguage: string
+  historyLog: HistoryItem[]
+  maxHistoryItems: number
+  aiProvider: string
+  customUrl: string
 
   // ── session-only (not persisted) ───────────────────────────
   conversationHistory: HistoryEntry[]
@@ -42,6 +55,12 @@ interface AppState {
   setLastPosition: (pos: string) => void
   toggleGamesEnabled: () => void
   setGamesInterval: (minutes: number) => void
+  setResponseLanguage: (lang: string) => void
+  addToHistory: (question: string, answer: string, model: string) => void
+  deleteHistoryItem: (id: string) => void
+  clearHistory: () => void
+  setAiProvider: (provider: string) => void
+  setCustomUrl: (url: string) => void
 }
 
 export const useStore = create<AppState>()(
@@ -60,6 +79,11 @@ export const useStore = create<AppState>()(
       lastPosition:        'bottom-right',
       gamesEnabled:        true,
       gamesInterval:       25,
+      responseLanguage:    'es',
+      historyLog:          [],
+      maxHistoryItems:     50,
+      aiProvider:          'lmstudio',
+      customUrl:           '',
       conversationHistory: [],
       conversationSummary: '',
 
@@ -77,8 +101,21 @@ export const useStore = create<AppState>()(
       setLastInteraction:(t)           => set({ lastInteraction: t }),
       setIsTopPosition:  (v)           => set({ isTopPosition: v }),
       setLastPosition:   (pos)         => set({ lastPosition: pos }),
-      toggleGamesEnabled: () => set((s) => ({ gamesEnabled: !s.gamesEnabled })),
-      setGamesInterval:   (minutes) => set({ gamesInterval: minutes }),
+      toggleGamesEnabled:  () => set((s) => ({ gamesEnabled: !s.gamesEnabled })),
+      setGamesInterval:    (minutes) => set({ gamesInterval: minutes }),
+      setResponseLanguage: (lang)    => set({ responseLanguage: lang }),
+      addToHistory: (question, answer, model) => set((s) => ({
+        historyLog: [
+          { id: Date.now().toString(), timestamp: Date.now(), question, answer, model },
+          ...s.historyLog,
+        ].slice(0, s.maxHistoryItems),
+      })),
+      deleteHistoryItem: (id) => set((s) => ({
+        historyLog: s.historyLog.filter((item) => item.id !== id),
+      })),
+      clearHistory:    () => set({ historyLog: [] }),
+      setAiProvider:   (provider) => set({ aiProvider: provider }),
+      setCustomUrl:    (url)      => set({ customUrl: url }),
     }),
     {
       name: 'debugduck-storage',
@@ -97,6 +134,11 @@ export const useStore = create<AppState>()(
         lastPosition:       s.lastPosition,
         gamesEnabled:       s.gamesEnabled,
         gamesInterval:      s.gamesInterval,
+        responseLanguage:   s.responseLanguage,
+        historyLog:         s.historyLog,
+        maxHistoryItems:    s.maxHistoryItems,
+        aiProvider:         s.aiProvider,
+        customUrl:          s.customUrl,
       }),
     }
   )

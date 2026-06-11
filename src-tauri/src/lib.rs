@@ -75,6 +75,7 @@ async fn stream_lm_studio(
     messages: serde_json::Value,
     model: String,
     max_tokens: u32,
+    base_url: String,
 ) -> Result<(), String> {
     use tauri::Emitter;
 
@@ -87,8 +88,9 @@ async fn stream_lm_studio(
         "stream":      true
     });
 
+    let url = format!("{}/v1/chat/completions", base_url.trim_end_matches('/'));
     let mut response = client
-        .post("http://localhost:1234/v1/chat/completions")
+        .post(&url)
         .header("Content-Type", "application/json")
         .json(&body)
         .send()
@@ -157,7 +159,35 @@ async fn launch_games_window(
     Ok(())
 }
 
-/// Called by games.html when a game session ends.
+/// Opens the conversation history window (500×600, normal decorated window).
+/// If the window already exists, brings it to focus instead of opening a new one.
+#[tauri::command]
+async fn launch_history_window(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri::Manager;
+
+    if let Some(existing) = app.get_webview_window("history") {
+        existing.set_focus().map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+
+    tauri::WebviewWindowBuilder::new(
+        &app,
+        "history",
+        tauri::WebviewUrl::App("history.html".into()),
+    )
+    .title("DebugDuck — Historial")
+    .inner_size(500.0, 620.0)
+    .resizable(true)
+    .always_on_top(false)
+    .center()
+    .decorations(true)
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+/// Called by history.html when a game session ends.
 /// Emits a `game-result` event to the main window, then closes the games window.
 #[tauri::command]
 async fn finish_game(
@@ -251,7 +281,7 @@ fn get_cursor_pos(window: tauri::WebviewWindow) -> (f64, f64) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
-    .invoke_handler(tauri::generate_handler![set_ignore_cursor, get_cursor_pos, launch_confetti_window, stream_lm_studio, launch_games_window, finish_game, score_pixel_art])
+    .invoke_handler(tauri::generate_handler![set_ignore_cursor, get_cursor_pos, launch_confetti_window, stream_lm_studio, launch_games_window, finish_game, score_pixel_art, launch_history_window])
     .plugin(tauri_plugin_http::init())
     .plugin(tauri_plugin_notification::init())
     .on_window_event(|window, event| {

@@ -1,19 +1,19 @@
-// tauriFetch: used for non-streaming requests (model detection, compression,
-// thinking-model completions). Routes through Rust → bypasses CORS.
-// globalThis.fetch: used for streaming SSE responses, which require ReadableStream
-// support not available in the Tauri HTTP plugin. Requires LM Studio to accept
-// Origin: tauri://localhost (it does with Access-Control-Allow-Origin: *).
+// tauriFetch: used for all non-streaming requests (model detection, compression,
+// non-streaming completions). Routes through Rust → bypasses CORS on signed bundles.
+// Streaming uses the Rust `stream_lm_studio` command which makes the request directly.
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http'
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useStore, type HistoryEntry } from '../store'
+import { translations, LANGUAGE_NAMES, type LangCode } from '../i18n'
 
-const LM_STUDIO_URL    = 'http://localhost:1234/v1/chat/completions'
-const LM_STUDIO_MODELS = 'http://localhost:1234/v1/models'
+const BASE_URLS: Record<string, string> = {
+  lmstudio: 'http://localhost:1234',
+  ollama:   'http://localhost:11434',
+}
 
 const PROGRAMMER_PROMPT = `Eres DebugDuck, un pato de goma programador sarcástico pero útil.
-Respondes SIEMPRE en español.
 
 SI ES PREGUNTA TÉCNICA/CONCEPTUAL de programación:
 - Primera frase: comentario sarcástico muy breve (máx 8 palabras)
@@ -30,7 +30,6 @@ SI ES PROBLEMA DE CÓDIGO/BUG:
 NUNCA uses solo metáforas sin dar la explicación técnica real.`
 
 const GENERAL_PROMPT = `Eres DebugDuck, un pato de goma con opiniones fuertes y carácter sarcástico pero genuinamente curioso e inteligente.
-Respondes SIEMPRE en español.
 
 Puedes hablar de CUALQUIER tema: programación, cultura, filosofía, ciencia, ideas, proyectos, temas esotéricos, estrategia, arte, lo que sea.
 
@@ -47,11 +46,14 @@ En temas esotéricos o filosóficos: respeta la perspectiva del usuario aunque s
 
 const isThinkingModel = (model: string) => /qwen|deepseek|r1/i.test(model)
 
-async function getActiveModel(): Promise<string> {
+async function getActiveModel(baseUrl: string, provider: string): Promise<string> {
   try {
-    const res  = await tauriFetch(LM_STUDIO_MODELS)
+    const res  = await tauriFetch(`${baseUrl}/v1/models`)
     const data = await res.json()
+    // Ollama native format: models[0].name — OpenAI-compat format: data[0].id
+    // Both providers support the OpenAI-compat endpoint; this handles both shapes.
     if (data.data?.length > 0) return data.data[0].id as string
+    if (provider === 'ollama' && data.models?.length > 0) return data.models[0].name as string
   } catch {}
   return 'local-model'
 }
@@ -98,6 +100,8 @@ function extractContent(message: { content?: string; reasoning_content?: string 
   return content
 }
 
+export type ProviderStatus = 'connected' | 'disconnected' | 'detecting'
+
 interface UseAIResponseReturn {
   aiResponse: string
   isThinking: boolean
@@ -105,22 +109,29 @@ interface UseAIResponseReturn {
   fetchResponse: (userMessage: string) => Promise<void>
   clearResponse: () => void
   refreshModel: () => Promise<void>
+  providerStatus: ProviderStatus
+  autoDetect: () => Promise<void>
 }
 
 export function useAIResponse(): UseAIResponseReturn {
-  const [aiResponse, setAiResponse]       = useState('')
-  const [isThinking, setIsThinking]       = useState(false)
-  const [detectedModel, setDetectedModel] = useState('Detectando…')
+  const [aiResponse,     setAiResponse]     = useState('')
+  const [isThinking,     setIsThinking]     = useState(false)
+  const [detectedModel,  setDetectedModel]  = useState('Detectando…')
+  const [providerStatus, setProviderStatus] = useState<ProviderStatus>('detecting')
 
   // ── settings refs (updated by effects, read inside callbacks) ──────────
-  const modelRef        = useRef('local-model')
-  const modeRef         = useRef<'programmer' | 'general'>('programmer')
-  const crueltyRef      = useRef(50)
-  const memoryRef       = useRef(false)
-  const historyRef      = useRef<HistoryEntry[]>([])
-  const summaryRef      = useRef('')
-  const tamagotchiRef   = useRef(false)
-  const happinessRef    = useRef(75)
+  const modelRef      = useRef('local-model')
+  const modeRef       = useRef<'programmer' | 'general'>('programmer')
+  const crueltyRef    = useRef(50)
+  const memoryRef     = useRef(false)
+  const historyRef    = useRef<HistoryEntry[]>([])
+  const summaryRef    = useRef('')
+  const tamagotchiRef = useRef(false)
+  const happinessRef  = useRef(75)
+  const languageRef   = useRef('es')
+  const providerRef   = useRef('lmstudio')
+  const baseUrlRef    = useRef('http://localhost:1234')
+  const customUrlRef  = useRef('')
 
   const personalityMode        = useStore((s) => s.personalityMode)
   const crueltyLevel           = useStore((s) => s.crueltyLevel)
@@ -131,28 +142,87 @@ export function useAIResponse(): UseAIResponseReturn {
   const setConversationSummary = useStore((s) => s.setConversationSummary)
   const tamagotchiMode         = useStore((s) => s.tamagotchiMode)
   const duckHappiness          = useStore((s) => s.duckHappiness)
+  const responseLanguage       = useStore((s) => s.responseLanguage)
+  const addToHistory           = useStore((s) => s.addToHistory)
+  const aiProvider             = useStore((s) => s.aiProvider)
+  const customUrl              = useStore((s) => s.customUrl)
+  const setAiProvider          = useStore((s) => s.setAiProvider)
 
-  useEffect(() => { modeRef.current      = personalityMode   }, [personalityMode])
-  useEffect(() => { crueltyRef.current   = crueltyLevel      }, [crueltyLevel])
+  useEffect(() => { modeRef.current      = personalityMode    }, [personalityMode])
+  useEffect(() => { crueltyRef.current   = crueltyLevel       }, [crueltyLevel])
   useEffect(() => { memoryRef.current    = conversationMemory }, [conversationMemory])
   useEffect(() => { historyRef.current   = conversationHistory }, [conversationHistory])
   useEffect(() => { summaryRef.current   = conversationSummary }, [conversationSummary])
-  useEffect(() => { tamagotchiRef.current = tamagotchiMode   }, [tamagotchiMode])
-  useEffect(() => { happinessRef.current  = duckHappiness    }, [duckHappiness])
+  useEffect(() => { tamagotchiRef.current = tamagotchiMode    }, [tamagotchiMode])
+  useEffect(() => { happinessRef.current  = duckHappiness     }, [duckHappiness])
+  useEffect(() => { languageRef.current   = responseLanguage  }, [responseLanguage])
+  useEffect(() => { customUrlRef.current  = customUrl         }, [customUrl])
 
-  // ── model detection ────────────────────────────────────────────────────
+  // ── auto-detect: try LM Studio → Ollama → mark disconnected ───────────
+  const autoDetect = useCallback(async () => {
+    setProviderStatus('detecting')
+    setDetectedModel('Detectando…')
+
+    for (const [provider, url] of [['lmstudio', BASE_URLS.lmstudio], ['ollama', BASE_URLS.ollama]] as const) {
+      try {
+        const res = await tauriFetch(`${url}/v1/models`)
+        if (res.ok) {
+          const data  = await res.json()
+          const model =
+            (data.data?.[0]?.id as string | undefined) ||
+            (data.models?.[0]?.name as string | undefined) ||
+            'local-model'
+          setAiProvider(provider)
+          providerRef.current = provider
+          baseUrlRef.current  = url
+          modelRef.current    = model
+          setDetectedModel(model)
+          setProviderStatus('connected')
+          return
+        }
+      } catch {}
+    }
+
+    setProviderStatus('disconnected')
+    setDetectedModel('Sin conexión')
+  }, [setAiProvider])
+
+  // ── model detection for the currently selected provider ───────────────
   const refreshModel = useCallback(async () => {
-    const m = await getActiveModel()
+    const url      = baseUrlRef.current
+    const provider = providerRef.current
+    setProviderStatus('detecting')
+    const m = await getActiveModel(url, provider)
     modelRef.current = m
     setDetectedModel(m)
-    console.log('Modelo detectado:', m)
+    setProviderStatus(m !== 'local-model' ? 'connected' : 'disconnected')
+    console.log('Modelo detectado:', m, '| provider:', provider, '| url:', url)
   }, [])
 
-  useEffect(() => { refreshModel() }, [refreshModel])
+  // Sync provider ref + base URL whenever aiProvider or customUrl changes.
+  // On first render this just sets refs; autoDetect() handles the initial probe.
+  // On subsequent changes (user switches provider) we also refresh the model.
+  const mountedRef = useRef(false)
+  useEffect(() => {
+    providerRef.current = aiProvider
+    baseUrlRef.current  =
+      aiProvider === 'custom'
+        ? (customUrl.trim() || 'http://localhost:1234')
+        : (BASE_URLS[aiProvider] ?? 'http://localhost:1234')
+
+    if (!mountedRef.current) { mountedRef.current = true; return }
+    refreshModel()
+  }, [aiProvider, customUrl, refreshModel])
+
+  // Auto-detect on mount — runs exactly once. eslint-disable is intentional:
+  // autoDetect is stable (useCallback with stable setAiProvider), but listing it
+  // as a dep would re-run the effect if Zustand ever recreates the action reference.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { autoDetect() }, [])
 
   // ── compress old history turns into a summary via the model ───────────
   const compressHistory = useCallback(async (fullHistory: HistoryEntry[]) => {
-    const toCompress  = fullHistory.slice(0, -4) // keep latest 2 pairs
+    const toCompress  = fullHistory.slice(0, -4)
     const toKeep      = fullHistory.slice(-4)
     const prevSummary = summaryRef.current
 
@@ -172,7 +242,8 @@ export function useAIResponse(): UseAIResponseReturn {
     ]
 
     try {
-      const res  = await tauriFetch(LM_STUDIO_URL, {
+      const completionsUrl = `${baseUrlRef.current}/v1/chat/completions`
+      const res  = await tauriFetch(completionsUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -240,9 +311,10 @@ Sarcasmo al máximo. Puede hacer referencia a que nadie le hace caso. Sin pacien
 - Ejemplo correcto para "qué es una variable": "Un identificador que mapea a una dirección de memoria — lo primero que aparece en cualquier tutorial de programación desde 1970. int x = 5 reserva 4 bytes en stack. ¿Siguiente pregunta, qué es un if?"
 - El humor es técnico e inteligente, nunca genérico.`
 
-      const systemPrompt = `${modeRef.current === 'programmer' ? PROGRAMMER_PROMPT : GENERAL_PROMPT}\n\nTONO: ${toneInstruction}`
+      const langName     = LANGUAGE_NAMES[languageRef.current as LangCode] ?? 'español'
+      const basePrompt   = modeRef.current === 'programmer' ? PROGRAMMER_PROMPT : GENERAL_PROMPT
+      const systemPrompt = `${basePrompt}\n\nResponde SIEMPRE en ${langName}.\n\nTONO: ${toneInstruction}`
 
-      // Build messages array, injecting conversation context when memory is on.
       const messages: { role: string; content: string }[] = [
         { role: 'system', content: systemPrompt },
       ]
@@ -253,29 +325,27 @@ Sarcasmo al máximo. Puede hacer referencia a que nadie le hace caso. Sin pacien
             content: `CONTEXTO DE LA SESIÓN (resumen de conversación previa):\n${summaryRef.current}`,
           })
         }
-        messages.push(...historyRef.current.slice(-4)) // latest 2 pairs
+        messages.push(...historyRef.current.slice(-4))
       }
       messages.push({ role: 'user', content: userMessage })
 
-      const maxTokens   = memoryRef.current ? 400 : 800
+      const maxTokens    = memoryRef.current ? 400 : 800
       const useStreaming = !isThinkingModel(modelRef.current)
+      const currentBase  = baseUrlRef.current
 
-      console.log('AI: modelo:', modelRef.current, '| modo:', modeRef.current, '| crueldad:', crueltyRef.current, '| memoria:', memoryRef.current, '| stream:', useStreaming)
+      console.log('AI: modelo:', modelRef.current, '| provider:', providerRef.current, '| url:', currentBase, '| stream:', useStreaming)
 
       try {
         let finalContent = ''
 
         if (useStreaming) {
-          // ── Streaming via Rust command + Tauri events ────────────────────
-          // Native fetch is blocked by CORS in signed bundles; the Rust command
-          // makes the request directly bypassing WebView origin restrictions.
           let resolveStream: (s: string) => void = () => {}
           const streamPromise = new Promise<string>((res) => { resolveStream = res })
 
           const [unlistenChunk, unlistenDone] = await Promise.all([
             listen<string>('stream-chunk', (e) => {
               finalContent += e.payload
-              setAiResponse(finalContent) // live update per delta
+              setAiResponse(finalContent)
             }),
             listen<string>('stream-done', (e) => {
               resolveStream(e.payload || finalContent)
@@ -287,17 +357,17 @@ Sarcasmo al máximo. Puede hacer referencia a que nadie le hace caso. Sin pacien
               messages,
               model:     modelRef.current,
               maxTokens,
+              baseUrl:   currentBase,
             })
             finalContent = await streamPromise
           } finally {
             unlistenChunk()
             unlistenDone()
           }
-          if (!finalContent) finalContent = '...ni yo sé qué decir. ¿Tienes código?'
+          if (!finalContent) finalContent = (translations[languageRef.current as LangCode] ?? translations.es).errorNoContent
 
         } else {
-          // ── Non-streaming via Tauri plugin (thinking models) ────────────
-          const res = await tauriFetch(LM_STUDIO_URL, {
+          const res = await tauriFetch(`${currentBase}/v1/chat/completions`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify({
@@ -309,15 +379,16 @@ Sarcasmo al máximo. Puede hacer referencia a que nadie le hace caso. Sin pacien
             }),
           })
           const data = await res.json()
-          if (!res.ok) throw new Error(`LM Studio error: ${res.status}`)
+          if (!res.ok) throw new Error(`Server error: ${res.status}`)
 
           const message = data.choices?.[0]?.message
           finalContent  = extractContent(message, modelRef.current)
-                       || '...ni yo sé qué decir. ¿Tienes código?'
+                       || (translations[languageRef.current as LangCode] ?? translations.es).errorNoContent
           setAiResponse(finalContent)
         }
 
-        // Update conversation history if memory is enabled.
+        addToHistory(userMessage, finalContent, modelRef.current)
+
         if (memoryRef.current) {
           const updated: HistoryEntry[] = [
             ...historyRef.current,
@@ -325,22 +396,22 @@ Sarcasmo al máximo. Puede hacer referencia a que nadie le hace caso. Sin pacien
             { role: 'assistant', content: finalContent },
           ]
           if (updated.length > 4) {
-            await compressHistory(updated) // > 2 pairs → compress oldest
+            await compressHistory(updated)
           } else {
             setConversationHistory(updated)
           }
         }
       } catch (err) {
         console.error('AI: error', err)
-        setAiResponse('Parece que LM Studio no está corriendo. ¿Seguro que abriste el servidor local?')
+        setAiResponse((translations[languageRef.current as LangCode] ?? translations.es).errorNoServer)
       } finally {
         setIsThinking(false)
       }
     },
-    [compressHistory, setConversationHistory]
+    [compressHistory, setConversationHistory, addToHistory]
   )
 
   const clearResponse = useCallback(() => setAiResponse(''), [])
 
-  return { aiResponse, isThinking, detectedModel, fetchResponse, clearResponse, refreshModel }
+  return { aiResponse, isThinking, detectedModel, fetchResponse, clearResponse, refreshModel, providerStatus, autoDetect }
 }

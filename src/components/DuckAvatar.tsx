@@ -18,18 +18,18 @@ interface Props {
   onDoubleClick: () => void
   onSettingsOpen: () => void
   onGamesOpen: () => void
+  onHistoryOpen: () => void
   isGaming: boolean
+  showSettings: boolean
 }
 
-export function DuckAvatar({ voiceState, hasResponse, onDoubleClick, onSettingsOpen, onGamesOpen, isGaming }: Props) {
-  const [hovered, setHovered] = useState(false)
+export function DuckAvatar({ voiceState, hasResponse, onDoubleClick, onSettingsOpen, onGamesOpen, onHistoryOpen, isGaming, showSettings }: Props) {
   const tamagotchiMode = useStore((s) => s.tamagotchiMode)
   const duckHappiness  = useStore((s) => s.duckHappiness)
   const isTopPosition  = useStore((s) => s.isTopPosition)
   const lastPosition   = useStore((s) => s.lastPosition)
   const isLeft         = lastPosition.includes('left')
   const mood = getDuckMood(duckHappiness)
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   // isGamingRef lets the animation loop read the live prop without stale closures.
@@ -70,14 +70,6 @@ export function DuckAvatar({ voiceState, hasResponse, onDoubleClick, onSettingsO
     img.src = frameSrc
   }, [frameSrc])
 
-  const showGear = () => {
-    clearTimeout(hideTimer.current)
-    setHovered(true)
-  }
-  const scheduleHideGear = () => {
-    hideTimer.current = setTimeout(() => setHovered(false), 200)
-  }
-
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -89,8 +81,6 @@ export function DuckAvatar({ voiceState, hasResponse, onDoubleClick, onSettingsO
 
       <div
         className="absolute inset-0 flex items-center justify-center pointer-events-auto cursor-pointer"
-        onMouseEnter={showGear}
-        onMouseLeave={scheduleHideGear}
         onDoubleClick={handleDoubleClick}
       >
         {voiceState === 'listening' && (
@@ -112,31 +102,47 @@ export function DuckAvatar({ voiceState, hasResponse, onDoubleClick, onSettingsO
         />
       </div>
 
-      {hovered && (
+      {/* Button column — hidden when settings panel is open */}
+      {!showSettings && <div style={{
+        position: 'absolute',
+        right: '2px',
+        top: '30%',
+        transform: 'translateY(-50%)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+        zIndex: 50,
+      }}>
         <button
           data-settings-btn="true"
-          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white hover:bg-white/35 transition-all text-xs pointer-events-auto z-10"
-          onMouseEnter={showGear}
-          onMouseLeave={scheduleHideGear}
+          style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.85)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.2)', pointerEvents: 'auto' }}
           onClick={(e) => { e.stopPropagation(); onSettingsOpen() }}
           aria-label="Ajustes"
+          title="Ajustes"
         >
-          ⚙
+          ⚙️
         </button>
-      )}
+        <button
+          data-games-btn="true"
+          style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.85)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.2)', pointerEvents: 'auto' }}
+          onClick={(e) => { e.stopPropagation(); onGamesOpen() }}
+          aria-label="Minijuegos"
+          title="Abrir Arcade"
+        >
+          🎮
+        </button>
+        <button
+          data-history-btn="true"
+          style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.85)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.2)', pointerEvents: 'auto' }}
+          onClick={(e) => { e.stopPropagation(); onHistoryOpen() }}
+          aria-label="Historial"
+          title="Ver historial"
+        >
+          📋
+        </button>
+      </div>}
 
-      {/* Games button — always visible, bottom-right corner */}
-      <button
-        data-games-btn="true"
-        className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-all text-xs pointer-events-auto z-10"
-        onClick={(e) => { e.stopPropagation(); onGamesOpen() }}
-        aria-label="Minijuegos"
-        title="Abrir Arcade"
-      >
-        🎮
-      </button>
-
-      {tamagotchiMode && (
+      {tamagotchiMode && !showSettings && (
         <div className="absolute top-1 -left-10 z-50 group pointer-events-auto">
           <div className="w-8 h-8 rounded-full bg-white/90 shadow-lg flex items-center justify-center text-base border-2 border-gray-200 cursor-pointer">
             {mood.emoji}

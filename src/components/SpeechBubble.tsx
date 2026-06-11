@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
+import { useTranslation } from '../i18n'
 
 export type BubblePhase = 'listening' | 'thinking' | 'response'
 
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function SpeechBubble({ phase, transcript, aiResponse, onEureka, onPomo, isTopPosition = false, isLeftPosition = false }: Props) {
+  const t = useTranslation()
   // Tail anchors toward the duck's face side. scaleX(-1) puts the beak on the left.
   const tailLeft = isLeftPosition ? '30%' : '50%'
   const handleEureka = async () => {
@@ -37,7 +39,7 @@ export function SpeechBubble({ phase, transcript, aiResponse, onEureka, onPomo, 
         {phase === 'listening' && (
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full border-2 border-green-500 animate-pulse shrink-0" />
-            <span className="text-gray-500 text-xs">Escuchando…</span>
+            <span className="text-gray-500 text-xs">{t.listening}</span>
           </div>
         )}
 
@@ -66,13 +68,13 @@ export function SpeechBubble({ phase, transcript, aiResponse, onEureka, onPomo, 
                 className="flex-1 bg-emerald-500 hover:bg-emerald-400 rounded-full py-1.5 text-[11px] font-semibold text-white transition-colors"
                 onClick={handleEureka}
               >
-                ¡Eureka! 💡
+                {t.eureka}
               </button>
               <button
                 className="flex-1 bg-rose-500 hover:bg-rose-400 rounded-full py-1.5 text-[11px] font-semibold text-white transition-colors"
                 onClick={onPomo}
               >
-                Pomo 🍅
+                {t.pomo}
               </button>
             </div>
           </div>

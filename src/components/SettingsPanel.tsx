@@ -1,5 +1,7 @@
 import { useWindowPosition, type Position } from '../hooks/useWindowPosition'
 import { useStore } from '../store'
+import { useTranslation, LANGUAGES } from '../i18n'
+import type { ProviderStatus } from '../hooks/useAIResponse'
 
 interface Props {
   onClose: () => void
@@ -7,6 +9,8 @@ interface Props {
   refreshModel: () => Promise<void>
   gamesTimeLeft: number
   gamesWindowOpen: boolean
+  providerStatus: ProviderStatus
+  autoDetect: () => Promise<void>
 }
 
 const GAME_INTERVALS = [15, 25, 45, 60]
@@ -38,8 +42,10 @@ const GRID: { pos: Position; label: string }[] = [
   { pos: 'bottom-right', label: '↘' },
 ]
 
-export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeLeft, gamesWindowOpen }: Props) {
+export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeLeft, gamesWindowOpen, providerStatus, autoDetect }: Props) {
+  const t = useTranslation()
   const { moveToPosition } = useWindowPosition()
+
   const aiModel             = useStore((s) => s.aiModel)
   const setAiModel          = useStore((s) => s.setAiModel)
   const personalityMode     = useStore((s) => s.personalityMode)
@@ -55,6 +61,12 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
   const toggleGamesEnabled     = useStore((s) => s.toggleGamesEnabled)
   const gamesInterval          = useStore((s) => s.gamesInterval)
   const setGamesInterval       = useStore((s) => s.setGamesInterval)
+  const responseLanguage       = useStore((s) => s.responseLanguage)
+  const setResponseLanguage    = useStore((s) => s.setResponseLanguage)
+  const aiProvider             = useStore((s) => s.aiProvider)
+  const setAiProvider          = useStore((s) => s.setAiProvider)
+  const customUrl              = useStore((s) => s.customUrl)
+  const setCustomUrl           = useStore((s) => s.setCustomUrl)
 
   const handlePosition = async (pos: Position) => {
     await moveToPosition(pos)
@@ -62,22 +74,22 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
   }
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 backdrop-blur-xl bg-black/50 rounded-2xl p-4 z-50">
+    <div className="absolute inset-0 flex flex-col items-center justify-start gap-4 backdrop-blur-xl bg-black/50 rounded-2xl p-4 z-50 overflow-y-auto pt-8">
 
       {/* Close */}
       <button
         className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/20 hover:bg-white/35 flex items-center justify-center text-white/70 hover:text-white text-xs transition-all"
         onClick={onClose}
-        aria-label="Cerrar ajustes"
+        aria-label="Close"
       >
         ✕
       </button>
 
-      <p className="text-white/50 text-[10px] uppercase tracking-widest">Ajustes</p>
+      <p className="text-white/50 text-[10px] uppercase tracking-widest">{t.settingsTitle}</p>
 
       {/* Personality mode toggle */}
       <div className="w-full flex flex-col gap-1">
-        <p className="text-white/50 text-[10px]">Personalidad</p>
+        <p className="text-white/50 text-[10px]">{t.personality}</p>
         <div className="flex gap-2">
           <button
             onClick={() => setPersonalityMode('programmer')}
@@ -87,7 +99,7 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
                 : 'bg-white/10 text-white/60 border-white/20 hover:bg-white/20'
             }`}
           >
-            🦆 Programador
+            🦆 {t.programmer}
           </button>
           <button
             onClick={() => setPersonalityMode('general')}
@@ -97,8 +109,28 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
                 : 'bg-white/10 text-white/60 border-white/20 hover:bg-white/20'
             }`}
           >
-            🌍 General
+            🌍 {t.general}
           </button>
+        </div>
+      </div>
+
+      {/* Language selector */}
+      <div className="w-full flex flex-col gap-1">
+        <p className="text-white/50 text-[10px]">{t.languageTitle}</p>
+        <div className="flex gap-1">
+          {LANGUAGES.map(({ code, flag, label }) => (
+            <button
+              key={code}
+              onClick={() => setResponseLanguage(code)}
+              className={`flex-1 py-1.5 rounded-xl text-[10px] font-medium transition-colors border ${
+                responseLanguage === code
+                  ? 'bg-yellow-400 text-black border-yellow-400'
+                  : 'bg-white/10 text-white/40 border-white/20 hover:bg-white/20'
+              }`}
+            >
+              {flag} {label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -106,15 +138,15 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
       <div className="w-full flex flex-col gap-1">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-white/70 text-[10px] font-medium">Memoria de conversación</p>
-            <p className="text-white/35 text-[9px] italic">El pato recuerda el contexto</p>
+            <p className="text-white/70 text-[10px] font-medium">{t.memoryTitle}</p>
+            <p className="text-white/35 text-[9px] italic">{t.memorySubtitle}</p>
           </div>
           <button
             onClick={toggleConversationMemory}
             className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${
               conversationMemory ? 'bg-emerald-500' : 'bg-white/20'
             }`}
-            aria-label="Toggle memoria"
+            aria-label="Toggle memory"
           >
             <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
               conversationMemory ? 'translate-x-5' : 'translate-x-0.5'
@@ -126,7 +158,7 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
             onClick={clearConversationData}
             className="text-[9px] text-rose-400/80 hover:text-rose-300 text-left underline transition-colors"
           >
-            Limpiar memoria de sesión
+            {t.clearMemory}
           </button>
         )}
       </div>
@@ -134,8 +166,8 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
       {/* Tamagotchi toggle */}
       <div className="w-full flex items-center justify-between">
         <div>
-          <p className="text-white/70 text-[10px] font-medium">🥚 Modo Tamagotchi</p>
-          <p className="text-white/35 text-[9px] italic">El pato tiene sentimientos. Cuídalo.</p>
+          <p className="text-white/70 text-[10px] font-medium">{t.tamagotchiTitle}</p>
+          <p className="text-white/35 text-[9px] italic">{t.tamagotchiSubtitle}</p>
         </div>
         <button
           onClick={toggleTamagotchi}
@@ -153,13 +185,13 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
       {/* Games toggle + timer + frequency */}
       <div className="w-full flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
-          <p className="text-white/70 text-[10px] font-medium">🎮 Minijuegos</p>
+          <p className="text-white/70 text-[10px] font-medium">{t.gamesTitle}</p>
           <button
             onClick={toggleGamesEnabled}
             className={`relative w-10 h-5 rounded-full transition-colors shrink-0 ${
               gamesEnabled ? 'bg-purple-500' : 'bg-white/20'
             }`}
-            aria-label="Toggle Minijuegos"
+            aria-label="Toggle Minigames"
           >
             <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
               gamesEnabled ? 'translate-x-5' : 'translate-x-0.5'
@@ -180,18 +212,18 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
             : 'text-green-400'
         }`}>
           {!gamesEnabled
-            ? 'Desactivado'
+            ? t.gamesDisabled
             : gamesWindowOpen
-            ? '¡Jugando ahora!'
+            ? t.gamesPlaying
             : gamesTimeLeft <= 0
-            ? '¡Es hora de jugar!'
-            : `Próximo en: ${formatTime(gamesTimeLeft)}`}
+            ? t.gamesNow
+            : `${t.gamesNext} ${formatTime(gamesTimeLeft)}`}
         </p>
 
         {/* Frequency selector */}
         {gamesEnabled && (
           <div className="flex flex-col gap-1">
-            <p className="text-white/40 text-[9px]">Frecuencia</p>
+            <p className="text-white/40 text-[9px]">{t.frequency}</p>
             <div className="flex gap-1.5">
               {GAME_INTERVALS.map(min => (
                 <button
@@ -215,8 +247,8 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
       {!tamagotchiMode && (
       <div className="w-full flex flex-col gap-1">
         <div className="flex justify-between text-white/50 text-[10px]">
-          <span>🎓 Pedagógico</span>
-          <span>😈 Cruel</span>
+          <span>{t.crueltyPedagogical}</span>
+          <span>{t.crueltyCruel}</span>
         </div>
         <input
           type="range"
@@ -228,24 +260,79 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
         />
         <p className="text-[10px] text-center text-white/40">
           {crueltyLevel < 30
-            ? '🎓 Mentor paciente — ideal para principiantes'
+            ? t.crueltyLabelMentor
             : crueltyLevel < 70
-            ? '🦆 Pato equilibrado — para todos los niveles'
-            : '😈 Sin piedad — solo para valientes'}
+            ? t.crueltyLabelBalance
+            : t.crueltyLabelBrutal}
         </p>
         <p className="text-[9px] text-center text-white/25 italic">
           {crueltyLevel < 30
-            ? 'El pato te guía con paciencia y sin juzgar'
+            ? t.crueltySubMentor
             : crueltyLevel < 70
-            ? 'El pato equilibra humor y utilidad'
-            : 'El pato no tiene tiempo para excusas'}
+            ? t.crueltySubBalance
+            : t.crueltySubBrutal}
         </p>
       </div>
       )}
 
+      {/* AI Server */}
+      <div className="w-full flex flex-col gap-1.5">
+        <div className="flex items-center justify-between">
+          <p className="text-white/50 text-[10px]">{t.serverTitle}</p>
+          <span className={`text-[9px] font-medium ${
+            providerStatus === 'connected'    ? 'text-green-400'  :
+            providerStatus === 'disconnected' ? 'text-red-400'    :
+            'text-yellow-400'
+          }`}>
+            {providerStatus === 'connected'    ? t.providerConnected    :
+             providerStatus === 'disconnected' ? t.providerDisconnected :
+             t.providerDetecting}
+          </span>
+        </div>
+
+        {/* Provider buttons */}
+        <div className="flex gap-1.5">
+          {(['lmstudio', 'ollama', 'custom'] as const).map((p) => (
+            <button
+              key={p}
+              onClick={() => setAiProvider(p)}
+              className={`flex-1 py-1.5 rounded-xl text-[9px] font-medium transition-colors border ${
+                aiProvider === p
+                  ? 'bg-cyan-500 text-white border-cyan-400'
+                  : 'bg-white/10 text-white/50 border-white/20 hover:bg-white/20'
+              }`}
+            >
+              {p === 'lmstudio' ? 'LM Studio' : p === 'ollama' ? 'Ollama' : 'Custom'}
+            </button>
+          ))}
+        </div>
+
+        {/* Custom URL input */}
+        {aiProvider === 'custom' && (
+          <div className="flex flex-col gap-0.5">
+            <label className="text-white/40 text-[9px]">{t.customUrlLabel}</label>
+            <input
+              type="text"
+              value={customUrl}
+              onChange={(e) => setCustomUrl(e.target.value)}
+              placeholder={t.customUrlPlaceholder}
+              className="w-full bg-white/10 border border-white/20 rounded-xl text-white text-[10px] px-2 py-1.5 outline-none focus:border-cyan-400/60 placeholder-white/25"
+            />
+          </div>
+        )}
+
+        {/* Auto-detect */}
+        <button
+          onClick={autoDetect}
+          className="w-full py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white/60 hover:text-white text-[9px] transition-colors"
+        >
+          {t.autoDetect}
+        </button>
+      </div>
+
       {/* Detected model */}
       <div className="w-full flex flex-col gap-1">
-        <p className="text-white/50 text-[10px]">Modelo activo</p>
+        <p className="text-white/50 text-[10px]">{t.activeModel}</p>
         <div className="flex items-center gap-2">
           <p className="flex-1 text-white/90 text-[10px] font-mono truncate bg-white/10 border border-white/20 rounded-xl px-2 py-1.5">
             {detectedModel}
@@ -253,7 +340,7 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
           <button
             onClick={refreshModel}
             className="shrink-0 px-2 py-1.5 rounded-xl bg-white/10 hover:bg-white/25 border border-white/20 text-white/70 hover:text-white text-[10px] transition-colors"
-            title="Re-detectar modelo"
+            title="Re-detect model"
           >
             ↺
           </button>
@@ -262,7 +349,7 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
 
       {/* Manual override selector */}
       <div className="w-full flex flex-col gap-1">
-        <label className="text-white/50 text-[10px]">Forzar modelo</label>
+        <label className="text-white/50 text-[10px]">{t.forceModel}</label>
         <select
           value={aiModel}
           onChange={(e) => setAiModel(e.target.value)}
@@ -278,7 +365,7 @@ export function SettingsPanel({ onClose, detectedModel, refreshModel, gamesTimeL
 
       {/* Window position grid */}
       <div className="flex flex-col gap-1 w-full items-center">
-        <p className="text-white/50 text-[10px] self-start">Posición ventana</p>
+        <p className="text-white/50 text-[10px] self-start">{t.windowPosition}</p>
         <div className="grid grid-cols-3 gap-1">
           {GRID.map(({ pos, label }) => (
             <button
