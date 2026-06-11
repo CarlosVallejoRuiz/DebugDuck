@@ -377,11 +377,4 @@ open src-tauri/target/debug/bundle/macos/DebugDuck.app
 
 ---
 
-### ⏳ PENDIENTE
-
-#### 6. Modo No Molestar automático
-- Integración con el calendario del sistema (macOS EventKit / Windows Calendar)
-- Detectar reuniones activas → ocultar o minimizar el pato
-- Indicador visual `🔕` cuando está en modo no molestar
-- Toggle manual en SettingsPanel
-- Notificación cuando termina la reunión
+**v0.3.0 completado al 100%.**

@@ -291,12 +291,7 @@ src/hooks/
 | 📋 **Historial de conversaciones** | Últimas 50 sesiones persistidas, búsqueda, copiar, borrar; ventana dedicada |
 | 🎮 **Botones verticales** | ⚙️🎮📋 apilados a la derecha del pato, se ocultan con el panel de ajustes |
 
-### ⏳ Pendiente en v0.4.0
-
-### 🔕 Modo No Molestar automático
-- Detecta reuniones activas en el calendario del sistema (macOS/Windows)
-- El pato se oculta o minimiza durante reuniones
-- Indicador visual `🔕` y toggle manual en Ajustes
+**v0.3.0 completado al 100%.**
 
 ---
 
