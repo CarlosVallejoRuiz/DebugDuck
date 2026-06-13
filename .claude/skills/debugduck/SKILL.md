@@ -1,7 +1,7 @@
 ---
 name: debugduck
 description: "DebugDuck project context — Tauri v2 transparent desktop widget with local AI. Auto-loaded for all work in this repo. Contains critical rules (build+sign required, no tauri dev, no native fetch), known bugs and fixes, architecture patterns, and anti-patterns specific to this project."
-version: 1.0.0
+version: 1.1.0
 ---
 
 # DebugDuck — Project Skill
@@ -10,6 +10,8 @@ Floating rubber duck debugging widget. Tauri v2 + React + TypeScript + Rust + Zu
 Bundle ID: `com.debugduck.widget` · Window: 280×550 transparent, always_on_top, no decorations.
 
 ---
+
+<critical_build_rules>
 
 ## REGLAS CRÍTICAS — leer antes de cualquier cambio
 
@@ -47,7 +49,11 @@ invoke('stream_lm_studio', { messages, model, maxTokens, baseUrl })
 ### Zustand store → persist con clave 'debugduck-storage'
 Al añadir campos nuevos al store, agregarlos también a `partialize` en store.ts — si no, no se persisten. Si se cambia la estructura de un campo existente, los datos guardados del usuario se rompen silenciosamente.
 
+</critical_build_rules>
+
 ---
+
+<anti_patterns>
 
 ## ANTIPATRONES — nunca hacer esto
 
@@ -61,7 +67,11 @@ Al añadir campos nuevos al store, agregarlos también a `partialize` en store.t
 | Crear ventana con label duplicado | Error — usar `format!("confetti-{}", timestamp)` |
 | `useEffect(() => { fn() }, [fn])` donde fn es callback | Loop infinito si fn se recrea |
 
+</anti_patterns>
+
 ---
+
+<architecture>
 
 ## ARQUITECTURA
 
@@ -96,6 +106,8 @@ src/assets/animations/
 - Escala: `190 / naturalHeight`, centrado horizontal
 - Click-through: lee alpha pixel del canvas cada 30ms via `get_cursor_pos()` Rust + `set_ignore_cursor(bool)`
 
+</architecture>
+
 ---
 
 ## COMANDOS RUST (lib.rs)
@@ -115,6 +127,8 @@ src/assets/animations/
 Todos los comandos deben estar en `tauri::generate_handler![...]` en `pub fn run()`.
 
 ---
+
+<local_ai_providers>
 
 ## SISTEMA DE IA
 
@@ -140,7 +154,11 @@ const isThinkingModel = /qwen|deepseek|r1/i.test(model)
 - `max_tokens`: 400 con memoria, 800 sin memoria
 - `base_url` siempre pasado como parámetro (multi-proveedor)
 
+</local_ai_providers>
+
 ---
+
+<window_system>
 
 ## SISTEMA DE VENTANAS
 
@@ -152,6 +170,8 @@ const isThinkingModel = /qwen|deepseek|r1/i.test(model)
 | `confetti-{ts}` | fullscreen | transparente, ignore_cursor_events, auto-cierra 2.2s |
 
 **Archivos HTML embebidos en el binario:** `confetti.html`, `games.html`, `history.html` — cualquier cambio requiere rebuild completo.
+
+</window_system>
 
 ---
 
@@ -186,6 +206,8 @@ Al añadir un nuevo proveedor o puerto, actualizar `http.json`.
 
 ---
 
+<state_management>
+
 ## STORE (store.ts) — campos persistidos
 
 ```typescript
@@ -205,6 +227,8 @@ historyLog: HistoryItem[]       // máx 50, { id, timestamp, question, answer, m
 ```
 
 `conversationHistory` y `conversationSummary` son **session-only** — no se persisten.
+
+</state_management>
 
 ---
 
