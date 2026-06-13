@@ -100,49 +100,86 @@ Después de un tiempo configurable sin jugar, el pato te sugiere un descanso con
 
 ---
 
-## 🤖 Configuración del servidor de IA local
+## 🖥️ Cómo configurar LM Studio (paso a paso)
 
-DebugDuck soporta **LM Studio** y **Ollama** con detección automática al arrancar. También acepta una URL personalizada para servidores corporativos.
+### Paso 1 — Descarga LM Studio
 
-### Opción A — LM Studio
+1. Ve a **[lmstudio.ai](https://lmstudio.ai)**
+2. Pulsa el botón de descarga para tu sistema operativo (macOS o Windows)
+3. Instala la aplicación normalmente y ábrela
 
-1. Descarga [LM Studio](https://lmstudio.ai) e instálalo
-2. Ábrelo y ve a la pestaña **Discover** para buscar modelos
+### Paso 2 — Descarga un modelo de IA
+
+Una vez abierto LM Studio:
+
+1. En la barra lateral izquierda busca el icono que parece una **lupa** 🔍 — se llama **Discover** o **Search**
+2. En el buscador escribe: `mistral`
+3. Busca **Mistral 7B Instruct** en los resultados
+4. Pulsa el botón **Download** que aparece a la derecha del modelo
+5. Espera a que se descargue completamente (puede tardar varios minutos)
+
+> 💡 **¿Poca RAM o GPU pequeña?** Busca `phi-3-mini` en su lugar — ocupa solo ~2 GB y funciona bien para debugging
 
 #### Modelos recomendados
 
-| Modelo | VRAM / RAM | Notas |
-|--------|-----------|-------|
-| `mistralai/Ministral-3B` | ~3 GB | Ligero y rápido, buenas respuestas |
+| Modelo | RAM / VRAM | Para quién |
+|--------|-----------|------------|
+| `phi-3-mini` (Q4) | ~2 GB | PCs con poca memoria |
+| `mistralai/Ministral-3B` | ~3 GB | Ligero y rápido |
 | `mistralai/Mistral-7B-Instruct` | ~6 GB | **Recomendado** — equilibrio ideal |
-| `mistralai/Mistral-7B-Instruct-v0.3` | ~6 GB | Alternativa estable |
-| `meta-llama/Llama-3.1-8B-Instruct` | ~7 GB | Sólido para preguntas técnicas |
-| `google/gemma-2-9b-it` | ~9 GB | Excelente para código |
+| `meta-llama/Llama-3.1-8B-Instruct` | ~7 GB | Muy bueno para código |
 
-> ⚠️ **Evita modelos "thinking"** (Qwen3, DeepSeek-R1, nombres con `reasoning`). DebugDuck los soporta, pero la experiencia es peor.
+> ⚠️ **Evita modelos "thinking"** (Qwen3, DeepSeek-R1, nombres con `reasoning`) — DebugDuck los soporta, pero la experiencia es peor.
 
-1. Abre la pestaña **Local Server** en LM Studio
-2. Selecciona un modelo y pulsa **Load Model**
-3. Activa el toggle **Status** → debe mostrar `Running on port 1234`
+### Paso 3 — Activa el servidor local
 
-### Opción B — Ollama
+Este es el paso más importante para conectar con DebugDuck:
+
+1. En la barra lateral izquierda busca el icono que parece **`<->`** — se llama **Local Server** o **Developer**
+2. Haz clic en él para abrir el panel del servidor
+3. En la parte superior verás un selector de modelo — haz clic y selecciona el modelo que descargaste
+4. Pulsa el botón **"Start Server"** o activa el toggle **"Status"**
+5. Cuando veas **`Server running on port 1234`** o el indicador se ponga en verde ✅ — el servidor está listo
+
+### Paso 4 — Conecta DebugDuck
+
+1. Abre DebugDuck
+2. El pato detectará LM Studio automáticamente al arrancar
+3. Verás **🟢 Conectado** en el panel de ajustes ⚙️
+4. ¡Listo! Haz doble clic en el pato y empieza
+
+### ❓ Problemas frecuentes
+
+**El pato dice "Sin conexión":**
+→ Verifica que el servidor de LM Studio está activo y muestra `Running on port 1234`
+→ Abre ajustes ⚙️ → sección **Proveedor IA** → pulsa **↺ Auto-detectar**
+
+**Error "Failed to load model" en Windows:**
+→ Tu GPU no tiene suficiente memoria para ese modelo
+→ En LM Studio activa **"CPU only"** en la configuración del modelo antes de cargarlo
+→ O descarga un modelo más pequeño como `phi-3-mini`
+
+**El modelo tarda mucho en responder:**
+→ Los modelos grandes son lentos la primera vez que cargan
+→ Prueba con `phi-3-mini` o `Ministral-3B` si la respuesta tarda más de 30 segundos
+
+---
+
+## 🤖 Alternativa — Ollama
+
+Ollama es más fácil de instalar y consume menos recursos que LM Studio:
 
 ```bash
-# Instalar Ollama
+# macOS (con Homebrew)
 brew install ollama
-
-# Descargar y arrancar un modelo
 ollama run llama3.2
+
+# Windows — descarga el instalador en ollama.com
 ```
 
-Ollama corre en `localhost:11434` por defecto. DebugDuck lo detecta automáticamente.
+Ollama corre en `localhost:11434`. DebugDuck lo detecta automáticamente igual que LM Studio.
 
-### Conectar con DebugDuck
-
-El pato detecta automáticamente qué servidor está activo al arrancar (primero LM Studio, luego Ollama). El indicador en ajustes muestra 🟢 Conectado o 🔴 Sin conexión.
-
-- Abre ajustes ⚙️ → **Proveedor IA** → selecciona LM Studio / Ollama / Custom
-- **Modelo activo** muestra el modelo detectado → pulsa **↺** para refrescar
+En ajustes ⚙️ → **Proveedor IA** → selecciona **Ollama** si la detección automática no lo encuentra.
 
 ---
 
@@ -292,25 +329,6 @@ src/hooks/
 | 🎮 **Botones verticales** | ⚙️🎮📋 apilados a la derecha del pato, se ocultan con el panel de ajustes |
 
 **v0.3.0 completado al 100%.**
-
----
-
-## 🛠️ Troubleshooting
-
-### ⚠️ Error "Failed to load model" en Windows (LM Studio)
-
-Si LM Studio muestra `ErrorOutOfDeviceMemory` al cargar el modelo, **no es un bug de DebugDuck** — el modelo es demasiado grande para la VRAM disponible.
-
-**Soluciones:**
-
-| Opción | VRAM requerida |
-|--------|---------------|
-| `phi-3-mini` (Q4) | ~2 GB |
-| `mistral-7b-instruct` (Q4) | ~4 GB |
-| `llama-3.2-1b` (Q4) | ~1 GB |
-
-- Si no tienes GPU dedicada: activa **"CPU only"** en la configuración del modelo en LM Studio.
-- Alternativa sin VRAM: usa **Ollama** (`ollama pull phi3`) y selecciona Ollama en Ajustes ⚙️.
 
 ---
 
