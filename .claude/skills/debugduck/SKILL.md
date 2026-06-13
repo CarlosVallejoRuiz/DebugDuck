@@ -90,6 +90,8 @@ src/
 │   └── SettingsPanel.tsx       # panel completo con overflow-y: auto
 ├── store.ts                    # Zustand persist ('debugduck-storage')
 ├── i18n.ts                     # translations + useTranslation() hook
+│                               #   const t = useTranslation()
+│                               #   t('eureka') → '¡Eureka! 💡' (ES) | 'Eureka! 💡' (EN)
 └── App.tsx                     # coordinador + click-through loop 30ms
 
 src-tauri/src/lib.rs            # todos los comandos Rust
@@ -123,6 +125,7 @@ src/assets/animations/
 | `finish_game(completed, won, game)` | Cierra arcade + emite `game-result` a main |
 | `score_pixel_art(base64_image, topic)` | IA puntúa pixel art (requiere modelo visión) |
 | `update_global_shortcut(old_shortcut, new_shortcut)` | Re-registra atajo global |
+| `call_lm_studio(messages, model, max_tokens, base_url)` | Petición no-streaming (thinking models) → devuelve String completo |
 
 Todos los comandos deben estar en `tauri::generate_handler![...]` en `pub fn run()`.
 
