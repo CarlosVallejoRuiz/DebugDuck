@@ -1,10 +1,10 @@
-🌍 [English](README.en.md) | Español
+🌍 English | [Español](README.es.md)
 
 <div align="center">
 
 # 🦆 DebugDuck
 
-**Tu pato de goma con IA local. Siempre flotando. Siempre juzgándote.**
+**Your rubber duck with local AI. Always floating. Always judging you.**
 
 [![Version](https://img.shields.io/badge/Version-v0.3.0-brightgreen?style=for-the-badge)](https://github.com/CarlosVallejoRuiz/DebugDuck/releases)
 [![Tauri](https://img.shields.io/badge/Tauri_v2-24C8DB?style=for-the-badge&logo=tauri&logoColor=white)](https://tauri.app)
@@ -15,199 +15,199 @@
 
 <img src="src/assets/DebugDuck.png" width="160" alt="DebugDuck mascot" />
 
-*El rubber duck debugging, pero con IA local, voz, animaciones y sus propios sentimientos.*
+*Rubber duck debugging, but with local AI, voice, animations and its own feelings.*
 
 </div>
 
 ---
 
-## ¿Qué es DebugDuck?
+## What is DebugDuck?
 
-Un widget de escritorio flotante para macOS que vive encima de todas tus ventanas. Sin distracciones, sin suscripciones, sin datos que salen de tu máquina. Solo tú, tu pato y tu modelo de lenguaje local.
+A floating desktop widget for macOS that lives on top of all your windows. No distractions, no subscriptions, no data leaving your machine. Just you, your duck, and your local language model.
 
-Hablas. El pato piensa. El pato responde. Si lo abandonas mucho tiempo, se pone de mal humor.
+You talk. The duck thinks. The duck answers. If you ignore it for too long, it gets grumpy.
 
 ---
 
 ## ✨ Features
 
-- 🎙️ **Activación por voz** — doble clic en el pato para hablar, Web Speech API
-- ⌨️ **Atajo de teclado global** — `Cmd+Shift+D` / `Ctrl+Shift+D` configurable desde cualquier app
-- 🧠 **IA 100% local** — conecta con LM Studio (`:1234`) u Ollama (`:11434`), sin internet
-- 🔌 **Multi-servidor** — LM Studio, Ollama o URL personalizada con detección automática
-- 📡 **Streaming en tiempo real** — las respuestas aparecen token a token
-- 🌍 **Multiidioma** — respuestas en Español, English, Français, Deutsch o Português
-- 🎭 **Dos personalidades** — Programador (socrático) o General (opinionado)
-- 😈 **Slider de crueldad** — de mentor paciente a "pregunta obvia para cualquier senior"
-- 🥚 **Modo Tamagotchi** — el pato tiene un estado de ánimo que afecta sus respuestas
-- 🎬 **Animaciones por estados** — idle, escuchando, pensando, respondiendo, gametime (140 frames PNG)
-- 🎉 **Botón Eureka** — confeti fullscreen + contador de victorias
-- 🍅 **Pomodoro integrado** — timer 25min con notificación nativa
-- 💬 **Memoria de conversación** — recuerda contexto con compresión automática
-- 📋 **Historial de conversaciones** — últimas 50 sesiones persistidas, con búsqueda y copiar
-- 🖱️ **Click-through pixel-perfect** — el pato no intercepta clicks en áreas transparentes
-- 🔍 **Detección automática de modelo** — detecta qué modelo tienes cargado
-- 📐 **Posición configurable** — grid 3×3 para mover el widget a cualquier esquina
-- 🎮 **Arcade integrado** — 12 minijuegos retro terminal cuando llevas mucho tiempo trabajando
+- 🎙️ **Voice activation** — double-click the duck to talk, Web Speech API
+- ⌨️ **Global keyboard shortcut** — `Cmd+Shift+D` / `Ctrl+Shift+D`, configurable from any app
+- 🧠 **100% local AI** — connects to LM Studio (`:1234`) or Ollama (`:11434`), no internet required
+- 🔌 **Multi-server** — LM Studio, Ollama or custom URL with auto-detection
+- 📡 **Real-time streaming** — responses appear token by token
+- 🌍 **Multilingual** — responses in Spanish, English, French, German or Portuguese
+- 🎭 **Two personalities** — Programmer (Socratic) or General (opinionated)
+- 😈 **Cruelty slider** — from patient mentor to "obvious question for any senior dev"
+- 🥚 **Tamagotchi mode** — the duck has a mood that affects its responses
+- 🎬 **State animations** — idle, listening, thinking, responding, gametime (140 PNG frames)
+- 🎉 **Eureka button** — fullscreen confetti + win counter
+- 🍅 **Built-in Pomodoro** — 25-min timer with native notification
+- 💬 **Conversation memory** — remembers context with automatic compression
+- 📋 **Conversation history** — last 50 sessions persisted, with search and copy
+- 🖱️ **Pixel-perfect click-through** — the duck doesn't intercept clicks on transparent areas
+- 🔍 **Automatic model detection** — detects which model you have loaded
+- 📐 **Configurable position** — 3×3 grid to move the widget to any corner
+- 🎮 **Built-in Arcade** — 12 retro terminal mini-games when you've been working too long
 
 ---
 
 ## 🕹️ DebugDuck Arcade
 
-Después de un tiempo configurable sin jugar, el pato te sugiere un descanso con una partida. La ventana de juegos es estética retro terminal: fondo negro, verde fosforescente, fuente monospace y efecto scanlines.
+After a configurable amount of time without playing, the duck suggests a break with a quick game. The game window uses retro terminal aesthetics: black background, phosphorescent green, monospace font and scanline effect.
 
-> Los juegos marcados como **Adaptable** cambian su contenido según el modo activo (Programador / General).
+> Games marked as **Adaptive** change their content based on the active mode (Programmer / General).
 
-| Juego | Descripción | Modo |
-|-------|-------------|------|
-| 🎯 **Flappy Duck** | Esquiva obstáculos al estilo Flappy Bird | Todos |
-| 🧠 **Debug Quiz** | Trivia de programación o cultura general | Adaptable |
-| 🎨 **Pato Pixel** | Dibuja y recibe puntuación de la IA local | Requiere visión |
-| ⚡ **Rubber Duck Typing** | Velocidad de escritura técnica o cotidiana | Adaptable |
-| 🔢 **Duck Math** | Operaciones mentales contra el reloj | Todos |
-| ❌⭕ **3 en Raya** | Juega contra el pato (minimax perfecto) | Todos |
-| 🃏 **Memory Duck** | Encuentra las parejas de cartas técnicas | Todos |
-| 🎵 **Duck Beat** | Simon Says con sonidos generados por Web Audio API | Todos |
-| 🔢 **Sudoku Duck** | Completa el grid 4×4 sin repetir números | Todos |
-| 🐛 **Bug Hunt** | Encuentra el bug en código o error lógico | Adaptable |
-| 💬 **Duck Wordle** | Adivina la palabra + definición por IA local | Adaptable |
-| 🚗 **Frogger Duck** | Carretera infinita con velocidad creciente | Todos |
+| Game | Description | Mode |
+|------|-------------|------|
+| 🎯 **Flappy Duck** | Dodge obstacles Flappy Bird style | All |
+| 🧠 **Debug Quiz** | Programming or general culture trivia | Adaptive |
+| 🎨 **Duck Pixel** | Draw and get scored by local AI | Requires vision |
+| ⚡ **Rubber Duck Typing** | Technical or everyday typing speed test | Adaptive |
+| 🔢 **Duck Math** | Mental math against the clock | All |
+| ❌⭕ **Tic-Tac-Toe** | Play against the duck (perfect minimax) | All |
+| 🃏 **Memory Duck** | Find matching pairs of tech cards | All |
+| 🎵 **Duck Beat** | Simon Says with Web Audio API sounds | All |
+| 🔢 **Sudoku Duck** | Complete the 4×4 grid without repeating | All |
+| 🐛 **Bug Hunt** | Find the bug in code or logical error | Adaptive |
+| 💬 **Duck Wordle** | Guess the word + AI-generated definition | Adaptive |
+| 🚗 **Frogger Duck** | Infinite road with increasing speed | All |
 
-### Configuración del Arcade
+### Arcade Configuration
 
-- **Toggle** en Ajustes ⚙️ → activar/desactivar el sistema completamente
-- **Frecuencia:** `[15m] [25m] [45m] [60m]` — tiempo de trabajo entre sugerencias
-- **Timer visible** en el panel de ajustes con código de colores (verde → amarillo → rojo)
-- **Activación manual** con el botón 🎮 junto al pato en cualquier momento
+- **Toggle** in Settings ⚙️ → enable/disable the system entirely
+- **Frequency:** `[15m] [25m] [45m] [60m]` — work time between suggestions
+- **Visible timer** in the settings panel with color coding (green → yellow → red)
+- **Manual activation** with the 🎮 button next to the duck at any time
 
-### Integración Tamagotchi
+### Tamagotchi Integration
 
-| Resultado | Happiness |
-|-----------|-----------|
-| Completar cualquier juego | +5 |
-| Ganar en Quiz, Math o Typing | +8 |
-| Perder al pato en 3 en Raya | +3 |
+| Result | Happiness |
+|--------|-----------|
+| Complete any game | +5 |
+| Win at Quiz, Math or Typing | +8 |
+| Lose to the duck at Tic-Tac-Toe | +3 |
 
 ---
 
-## 📋 Requisitos del sistema
+## 📋 System Requirements
 
-| Requisito | Mínimo | Recomendado |
-|-----------|--------|-------------|
+| Requirement | Minimum | Recommended |
+|-------------|---------|-------------|
 | macOS | 12 Monterey | 14 Sonoma+ |
 | RAM | 8 GB | 16 GB |
 | Chip | Intel / Apple Silicon | Apple Silicon |
-| [LM Studio](https://lmstudio.ai) | cualquier versión | última versión |
-| Micrófono | requerido | — |
+| [LM Studio](https://lmstudio.ai) | any version | latest version |
+| Microphone | required | — |
 
 ---
 
-## 🖥️ Cómo configurar LM Studio (paso a paso)
+## 🖥️ How to set up LM Studio (step by step)
 
-### Paso 1 — Descarga LM Studio
+### Step 1 — Download LM Studio
 
-1. Ve a **[lmstudio.ai](https://lmstudio.ai)**
-2. Pulsa el botón de descarga para tu sistema operativo (macOS o Windows)
-3. Instala la aplicación normalmente y ábrela
+1. Go to **[lmstudio.ai](https://lmstudio.ai)**
+2. Click the download button for your operating system (macOS or Windows)
+3. Install the app normally and open it
 
-### Paso 2 — Descarga un modelo de IA
+### Step 2 — Download an AI model
 
-Una vez abierto LM Studio:
+Once LM Studio is open:
 
-1. En la barra lateral izquierda busca el icono que parece una **lupa** 🔍 — se llama **Discover** o **Search**
-2. En el buscador escribe: `mistral`
-3. Busca **Mistral 7B Instruct** en los resultados
-4. Pulsa el botón **Download** que aparece a la derecha del modelo
-5. Espera a que se descargue completamente (puede tardar varios minutos)
+1. In the left sidebar, find the icon that looks like a **magnifying glass** 🔍 — it's called **Discover** or **Search**
+2. Type in the search box: `mistral`
+3. Find **Mistral 7B Instruct** in the results
+4. Click the **Download** button that appears to the right of the model
+5. Wait for it to finish downloading (may take several minutes)
 
-> 💡 **¿Poca RAM o GPU pequeña?** Busca `phi-3-mini` en su lugar — ocupa solo ~2 GB y funciona bien para debugging
+> 💡 **Low RAM or small GPU?** Search for `phi-3-mini` instead — it only needs ~2 GB and works well for debugging
 
-#### Modelos recomendados
+#### Recommended models
 
-| Modelo | RAM / VRAM | Para quién |
-|--------|-----------|------------|
-| `phi-3-mini` (Q4) | ~2 GB | PCs con poca memoria |
-| `mistralai/Ministral-3B` | ~3 GB | Ligero y rápido |
-| `mistralai/Mistral-7B-Instruct` | ~6 GB | **Recomendado** — equilibrio ideal |
-| `meta-llama/Llama-3.1-8B-Instruct` | ~7 GB | Muy bueno para código |
+| Model | RAM / VRAM | Best for |
+|-------|-----------|----------|
+| `phi-3-mini` (Q4) | ~2 GB | PCs with limited memory |
+| `mistralai/Ministral-3B` | ~3 GB | Light and fast |
+| `mistralai/Mistral-7B-Instruct` | ~6 GB | **Recommended** — ideal balance |
+| `meta-llama/Llama-3.1-8B-Instruct` | ~7 GB | Great for code |
 
-> ⚠️ **Evita modelos "thinking"** (Qwen3, DeepSeek-R1, nombres con `reasoning`) — DebugDuck los soporta, pero la experiencia es peor.
+> ⚠️ **Avoid "thinking" models** (Qwen3, DeepSeek-R1, names with `reasoning`) — DebugDuck supports them, but the experience is worse.
 
-### Paso 3 — Activa el servidor local
+### Step 3 — Start the local server
 
-Este es el paso más importante para conectar con DebugDuck:
+This is the most important step to connect with DebugDuck:
 
-1. En la barra lateral izquierda busca el icono que parece **`<->`** — se llama **Local Server** o **Developer**
-2. Haz clic en él para abrir el panel del servidor
-3. En la parte superior verás un selector de modelo — haz clic y selecciona el modelo que descargaste
-4. Pulsa el botón **"Start Server"** o activa el toggle **"Status"**
-5. Cuando veas **`Server running on port 1234`** o el indicador se ponga en verde ✅ — el servidor está listo
+1. In the left sidebar, find the icon that looks like **`<->`** — it's called **Local Server** or **Developer**
+2. Click it to open the server panel
+3. At the top you'll see a model selector — click it and select the model you downloaded
+4. Click the **"Start Server"** button or toggle the **"Status"** switch
+5. When you see **`Server running on port 1234`** or the indicator turns green ✅ — the server is ready
 
-### Paso 4 — Conecta DebugDuck
+### Step 4 — Connect DebugDuck
 
-1. Abre DebugDuck
-2. El pato detectará LM Studio automáticamente al arrancar
-3. Verás **🟢 Conectado** en el panel de ajustes ⚙️
-4. ¡Listo! Haz doble clic en el pato y empieza
+1. Open DebugDuck
+2. The duck will automatically detect LM Studio on startup
+3. You'll see **🟢 Connected** in the settings panel ⚙️
+4. Done! Double-click the duck and start talking
 
-### ❓ Problemas frecuentes
+### ❓ Common issues
 
-**El pato dice "Sin conexión":**
-→ Verifica que el servidor de LM Studio está activo y muestra `Running on port 1234`
-→ Abre ajustes ⚙️ → sección **Proveedor IA** → pulsa **↺ Auto-detectar**
+**The duck says "No connection":**
+→ Verify the LM Studio server is active and shows `Running on port 1234`
+→ Open settings ⚙️ → **AI Provider** section → click **↺ Auto-detect**
 
-**Error "Failed to load model" en Windows:**
-→ Tu GPU no tiene suficiente memoria para ese modelo
-→ En LM Studio activa **"CPU only"** en la configuración del modelo antes de cargarlo
-→ O descarga un modelo más pequeño como `phi-3-mini`
+**"Failed to load model" error on Windows:**
+→ Your GPU doesn't have enough memory for that model
+→ In LM Studio, enable **"CPU only"** in the model settings before loading it
+→ Or download a smaller model like `phi-3-mini`
 
-**El modelo tarda mucho en responder:**
-→ Los modelos grandes son lentos la primera vez que cargan
-→ Prueba con `phi-3-mini` o `Ministral-3B` si la respuesta tarda más de 30 segundos
+**The model takes too long to respond:**
+→ Large models are slow the first time they load
+→ Try `phi-3-mini` or `Ministral-3B` if responses take more than 30 seconds
 
 ---
 
-## 🤖 Alternativa — Ollama
+## 🤖 Alternative — Ollama
 
-Ollama es más fácil de instalar y consume menos recursos que LM Studio:
+Ollama is easier to install and uses fewer resources than LM Studio:
 
 ```bash
-# macOS (con Homebrew)
+# macOS (with Homebrew)
 brew install ollama
 ollama run llama3.2
 
-# Windows — descarga el instalador en ollama.com
+# Windows — download the installer at ollama.com
 ```
 
-Ollama corre en `localhost:11434`. DebugDuck lo detecta automáticamente igual que LM Studio.
+Ollama runs on `localhost:11434`. DebugDuck detects it automatically just like LM Studio.
 
-En ajustes ⚙️ → **Proveedor IA** → selecciona **Ollama** si la detección automática no lo encuentra.
+In settings ⚙️ → **AI Provider** → select **Ollama** if auto-detection doesn't find it.
 
 ---
 
-## 🚀 Instalación y desarrollo
+## 🚀 Installation and development
 
-### Prerrequisitos
+### Prerequisites
 
 ```bash
 # Rust toolchain
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Node.js 20+
-# (Recomendado: usar nvm o fnm)
+# (Recommended: use nvm or fnm)
 ```
 
-### Clonar y arrancar
+### Clone and install
 
 ```bash
-git clone https://github.com/tu-usuario/DebugDuck.git
+git clone https://github.com/CarlosVallejoRuiz/DebugDuck.git
 cd DebugDuck
 npm install
 ```
 
-### Build de desarrollo (requerido — no usar `tauri dev`)
+### Development build (required — do not use `tauri dev`)
 
-> ⚠️ El widget usa `SpeechRecognition` y `SpeechSynthesis`, que requieren un bundle `.app` firmado en macOS. `tauri dev` no funciona para esto.
+> ⚠️ The widget uses `SpeechRecognition` and `SpeechSynthesis`, which require a signed `.app` bundle on macOS. `tauri dev` does not work for this.
 
 ```bash
 npm run tauri build -- --debug && \
@@ -219,142 +219,142 @@ open src-tauri/target/debug/bundle/macos/DebugDuck.app
 
 ---
 
-## 🦆 Cómo usar DebugDuck
+## 🦆 How to use DebugDuck
 
-### Interacción básica
+### Basic interaction
 
-| Acción | Qué hace |
-|--------|----------|
-| **Doble clic** en el pato | Activa el micrófono |
-| Habla tu pregunta | El pato escucha y transcribe |
-| Espera la respuesta | Animación "rasca cabeza" mientras piensa |
-| Lee el bocadillo | Respuesta scrolleable estilo cómic |
-| **¡Eureka!** | Entendiste — confeti 🎉, +1 contador, +10 felicidad |
-| **Pomo** | Inicia timer Pomodoro de 25 min 🍅 |
-| **Doble clic** (con bocadillo abierto) | Cierra y vuelve a idle |
+| Action | What it does |
+|--------|-------------|
+| **Double-click** the duck | Activates the microphone |
+| Speak your question | The duck listens and transcribes |
+| Wait for the response | "Scratching head" animation while thinking |
+| Read the speech bubble | Scrollable comic-style response |
+| **Eureka!** | You got it — confetti 🎉, +1 counter, +10 happiness |
+| **Pomo** | Starts a 25-min Pomodoro timer 🍅 |
+| **Double-click** (with bubble open) | Closes and returns to idle |
 
-### Atajo de teclado global
+### Global keyboard shortcut
 
-Activa el micrófono desde cualquier app sin tocar el pato:
+Activate the microphone from any app without touching the duck:
 
-- **Por defecto:** `Cmd+Shift+D` (Mac) / `Ctrl+Shift+D` (Windows)
-- **Para cambiar:** Ajustes ⚙️ → sección `⌨️ Atajo de teclado` → clic en **Cambiar** → pulsa la combinación deseada
-- El pato muestra un flash "🎙️ Atajo activado" 0.8s antes de activar el micrófono
+- **Default:** `Cmd+Shift+D` (Mac) / `Ctrl+Shift+D` (Windows)
+- **To change:** Settings ⚙️ → `⌨️ Keyboard shortcut` section → click **Change** → press the desired combination
+- The duck shows a "🎙️ Shortcut activated" flash 0.8s before activating the microphone
 
-### Ajustes ⚙️
+### Settings ⚙️
 
-Clic en el botón ⚙️ a la derecha del pato para abrir ajustes:
+Click the ⚙️ button to the right of the duck to open settings:
 
-- **Personalidad** — `🦆 Programador` (modo socrático, no da soluciones directas) o `🌍 General` (habla de cualquier tema)
-- **Proveedor IA** — selector LM Studio / Ollama / Custom URL con indicador de conexión
-- **Idioma** — Español / English / Français / Deutsch / Português
-- **Modo Tamagotchi** — activa el sistema de estado de ánimo
-- **Slider de crueldad** — solo visible cuando Tamagotchi está desactivado
-- **Memoria** — el pato recuerda hasta 4 mensajes + resumen comprimido
-- **Atajo de teclado** — configura el shortcut global
-- **Minijuegos** — toggle ON/OFF + selector de frecuencia `[15m] [25m] [45m] [60m]` + timer de cuenta atrás
-- **Posición** — grid 3×3 para mover el widget
+- **Personality** — `🦆 Programmer` (Socratic mode, doesn't give direct solutions) or `🌍 General` (talks about any topic)
+- **AI Provider** — LM Studio / Ollama / Custom URL selector with connection indicator
+- **Language** — Español / English / Français / Deutsch / Português
+- **Tamagotchi mode** — enables the mood system
+- **Cruelty slider** — only visible when Tamagotchi is off
+- **Memory** — the duck remembers up to 4 messages + compressed summary
+- **Keyboard shortcut** — configure the global shortcut
+- **Mini-games** — ON/OFF toggle + frequency selector `[15m] [25m] [45m] [60m]` + countdown timer
+- **Position** — 3×3 grid to move the widget
 
-### 🥚 Modo Tamagotchi
+### 🥚 Tamagotchi Mode
 
-Cuando está activado, el estado de ánimo del pato controla el tono de sus respuestas en lugar del slider de crueldad:
+When enabled, the duck's mood controls the tone of its responses instead of the cruelty slider:
 
-| Estado | Happiness | Comportamiento |
-|--------|-----------|----------------|
-| 😊 Feliz | 70–100 | Entusiasta, buen rollo, comentarios divertidos |
-| 😐 Neutral | 40–69 | Directo, trabajo hecho, sarcasmo moderado |
-| 😤 Malhumorado | 20–39 | Cortante, se queja del abandono |
-| 😡 Furioso | 0–19 | Respuestas muy cortas, sarcasmo al máximo |
+| State | Happiness | Behavior |
+|-------|-----------|----------|
+| 😊 Happy | 70–100 | Enthusiastic, good vibes, funny comments |
+| 😐 Neutral | 40–69 | Direct, gets the job done, moderate sarcasm |
+| 😤 Grumpy | 20–39 | Curt, complains about being ignored |
+| 😡 Furious | 0–19 | Very short answers, maximum sarcasm |
 
-**Eventos que modifican la felicidad:**
+**Events that affect happiness:**
 
-| Evento | Cambio |
-|--------|--------|
-| ¡Eureka! | +10 |
-| Pomodoro completado | +5 |
-| Pregunta larga (>8 palabras) | +3 |
-| Pregunta muy corta (<4 palabras) | −2 |
-| Más de 1h sin interacción | −8 por hora (mínimo 5) |
+| Event | Change |
+|-------|--------|
+| Eureka! | +10 |
+| Pomodoro completed | +5 |
+| Long question (>8 words) | +3 |
+| Very short question (<4 words) | −2 |
+| More than 1h without interaction | −8 per hour (minimum 5) |
 
-El badge de estado (emoji) aparece a la izquierda del pato. Hover sobre él para ver la barra de vida.
+The status badge (emoji) appears next to the duck. Hover over it to see the health bar.
 
 ---
 
 ## 🏗️ Tech stack
 
-| Tecnología | Uso |
+| Technology | Use |
 |-----------|-----|
-| **Tauri v2** | Shell nativo macOS, ventana transparente, comandos Rust |
-| **React 19** | UI declarativa, hooks para lógica |
-| **TypeScript** | Tipado estático en todo el frontend |
-| **Vite 8** | Build tool, HMR, import de assets PNG |
-| **Tailwind CSS v4** | Estilos utility-first |
-| **Zustand** | Estado global con persistencia en localStorage |
-| **Rust / reqwest** | Streaming SSE a LM Studio (bypass CORS en bundle firmado) |
-| **Web Speech API** | Reconocimiento de voz sin dependencias externas |
-| **Canvas API** | Animaciones frame-by-frame + alpha sampling para click-through |
+| **Tauri v2** | Native macOS shell, transparent window, Rust commands |
+| **React 19** | Declarative UI, hooks for logic |
+| **TypeScript** | Static typing across the entire frontend |
+| **Vite 8** | Build tool, HMR, PNG asset imports |
+| **Tailwind CSS v4** | Utility-first styles |
+| **Zustand** | Global state with localStorage persistence |
+| **Rust / reqwest** | SSE streaming to LM Studio (CORS bypass in signed bundle) |
+| **Web Speech API** | Voice recognition without external dependencies |
+| **Canvas API** | Frame-by-frame animations + alpha sampling for click-through |
 
-### Arquitectura de hooks
+### Hook architecture
 
 ```
 src/hooks/
-├── useVoiceRecognition.ts   # Web Speech API + corrección de términos técnicos
-├── useAIResponse.ts         # LM Studio + streaming SSE + memoria comprimida
-├── useAnimation.ts          # Sistema de animaciones por estado
-├── usePomodoro.ts           # Timer 25min + notificación nativa
-├── useTamagotchi.ts         # Sistema de estado de ánimo + decay automático
-└── useWindowPosition.ts     # Posicionamiento en pantalla via Rust
+├── useVoiceRecognition.ts   # Web Speech API + tech term correction
+├── useAIResponse.ts         # LM Studio + SSE streaming + compressed memory
+├── useAnimation.ts          # State-based animation system
+├── usePomodoro.ts           # 25-min timer + native notification
+├── useTamagotchi.ts         # Mood system + automatic decay
+└── useWindowPosition.ts     # On-screen positioning via Rust
 ```
 
-### Estados de animación
+### Animation states
 
-| Estado | Trigger | Descripción |
-|--------|---------|-------------|
-| `idle` | Por defecto | Loop continuo + animación aleatoria cada 8-15s |
-| `listening` | Micrófono activo | Cicla rasca / asiente / libreta |
-| `thinking` | Esperando respuesta IA | Loop rasca continuo |
-| `responding` | Respuesta visible | Loop idle |
-| `gametime` | Ventana arcade abierta | 3 fases: entrada → loop → salida inversa |
+| State | Trigger | Description |
+|-------|---------|-------------|
+| `idle` | Default | Continuous loop + random animation every 8-15s |
+| `listening` | Microphone active | Cycles scratch / nod / notebook |
+| `thinking` | Waiting for AI response | Continuous scratch loop |
+| `responding` | Response visible | Idle loop |
+| `gametime` | Arcade window open | 3 phases: enter → loop → reverse exit |
 
 ---
 
 ## 🗺️ Roadmap v0.3.0
 
-### ✅ Implementado en v0.3.0
+### ✅ Shipped in v0.3.0
 
-| Feature | Descripción |
+| Feature | Description |
 |---------|-------------|
-| 🔌 **Ollama + URL personalizada** | Detección automática LM Studio/Ollama, selector en Ajustes, soporte URL custom |
-| 🌍 **Multiidioma** | Respuestas en ES/EN/FR/DE/PT, UI traducida, idioma persistido en Zustand |
-| ⌨️ **Atajo de teclado global** | `Cmd+Shift+D` configurable, funciona desde cualquier app del sistema |
-| 📋 **Historial de conversaciones** | Últimas 50 sesiones persistidas, búsqueda, copiar, borrar; ventana dedicada |
-| 🎮 **Botones verticales** | ⚙️🎮📋 apilados a la derecha del pato, se ocultan con el panel de ajustes |
+| 🔌 **Ollama + custom URL** | Auto-detection LM Studio/Ollama, selector in Settings, custom URL support |
+| 🌍 **Multilingual** | Responses in ES/EN/FR/DE/PT, translated UI, language persisted in Zustand |
+| ⌨️ **Global keyboard shortcut** | Configurable `Cmd+Shift+D`, works from any app system-wide |
+| 📋 **Conversation history** | Last 50 sessions persisted, search, copy, delete; dedicated window |
+| 🎮 **Vertical buttons** | ⚙️🎮📋 stacked to the right of the duck, hidden when settings panel is open |
 
-**v0.3.0 completado al 100%.**
-
----
-
-## 🤝 Contribuir
-
-¿Quieres implementar alguna feature del roadmap o tienes ideas nuevas?
-
-1. Haz fork del repositorio
-2. Crea una rama: `git checkout -b feat/nombre-feature`
-3. Abre un Pull Request describiendo el cambio
-
-Cualquier PR es bienvenido: nuevas features, bug fixes, mejoras de rendimiento, traducciones o documentación.
+**v0.3.0 complete.**
 
 ---
 
-## 📄 Licencia
+## 🤝 Contributing
 
-MIT — haz lo que quieras, pero si el pato te ayuda a resolver un bug, mínimo dale un Eureka.
+Want to implement a feature or have new ideas?
+
+1. Fork the repository
+2. Create a branch: `git checkout -b feat/feature-name`
+3. Open a Pull Request describing the change
+
+Any PR is welcome: new features, bug fixes, performance improvements, translations or documentation.
+
+---
+
+## 📄 License
+
+MIT — do whatever you want, but if the duck helps you fix a bug, at least give it an Eureka.
 
 ---
 
 <div align="center">
 
-*Hecho con frustración, cafeína y rubber duck debugging.*
+*Built with frustration, caffeine and rubber duck debugging.*
 
 🦆
 
