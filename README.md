@@ -295,6 +295,25 @@ src/hooks/
 
 ---
 
+## 🛠️ Troubleshooting
+
+### ⚠️ Error "Failed to load model" en Windows (LM Studio)
+
+Si LM Studio muestra `ErrorOutOfDeviceMemory` al cargar el modelo, **no es un bug de DebugDuck** — el modelo es demasiado grande para la VRAM disponible.
+
+**Soluciones:**
+
+| Opción | VRAM requerida |
+|--------|---------------|
+| `phi-3-mini` (Q4) | ~2 GB |
+| `mistral-7b-instruct` (Q4) | ~4 GB |
+| `llama-3.2-1b` (Q4) | ~1 GB |
+
+- Si no tienes GPU dedicada: activa **"CPU only"** en la configuración del modelo en LM Studio.
+- Alternativa sin VRAM: usa **Ollama** (`ollama pull phi3`) y selecciona Ollama en Ajustes ⚙️.
+
+---
+
 ## 🤝 Contribuir
 
 ¿Quieres implementar alguna feature del roadmap o tienes ideas nuevas?

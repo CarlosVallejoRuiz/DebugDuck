@@ -9,6 +9,7 @@ html,
 body,
 #root {
   background: transparent !important;
+  background-color: transparent !important;
   margin: 0;
   padding: 0;
   width: 100%;

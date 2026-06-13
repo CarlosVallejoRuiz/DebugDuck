@@ -338,7 +338,7 @@ function App() {
   }, [showBubble, showSettings, showGameSuggestion])
 
   return (
-    <div className="w-full h-full relative p-0 m-0">
+    <div className="w-full h-full relative p-0 m-0" style={{ background: 'transparent' }}>
 
       {/* Drag strip — 20px at top, uses startDragging() on mousedown. */}
       <div
