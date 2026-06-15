@@ -17,6 +17,8 @@ body,
   overflow: hidden;
   /* Transparent areas pass clicks through to the desktop */
   pointer-events: none;
+  /* Prevent WebView2/WebKit from treating the root as a drag region */
+  -webkit-app-region: no-drag;
 }
 
 /* Staggered bounce for the "thinking" dots in SpeechBubble */

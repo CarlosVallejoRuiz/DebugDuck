@@ -200,6 +200,17 @@ function App() {
     return () => { unlisten?.() }
   }, [setDuckHappiness, startGamesTimer])
 
+  // When the user closes the arcade window via the OS X button (not via the
+  // in-game close button which calls finish_game), reset animation + timer.
+  useEffect(() => {
+    let unlisten: (() => void) | undefined
+    listen('games-window-closed', () => {
+      setGamesWindowOpen(false)
+      startGamesTimer()
+    }).then(fn => { unlisten = fn })
+    return () => { unlisten?.() }
+  }, [startGamesTimer])
+
   // Global keyboard shortcut — re-register on mount if user stored a custom one,
   // then listen for the trigger event emitted by Rust.
   const showBubbleRef  = useRef(false)
@@ -333,12 +344,13 @@ function App() {
   useEffect(() => { isThinkingRef.current = isThinking }, [isThinking])
 
   // Keep uiVisibleRef in sync so the click-through interval can read it.
+  // isThinking is included: the duck is non-interactive while waiting for AI.
   useEffect(() => {
-    uiVisibleRef.current = showBubble || showSettings || showGameSuggestion
-  }, [showBubble, showSettings, showGameSuggestion])
+    uiVisibleRef.current = showBubble || showSettings || showGameSuggestion || isThinking
+  }, [showBubble, showSettings, showGameSuggestion, isThinking])
 
   return (
-    <div className="w-full h-full relative p-0 m-0" style={{ background: 'transparent' }}>
+    <div className="w-full h-full relative p-0 m-0" style={{ background: 'transparent', backgroundColor: 'transparent' }}>
 
       {/* Drag strip — 20px at top, uses startDragging() on mousedown. */}
       <div

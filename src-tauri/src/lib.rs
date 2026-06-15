@@ -142,7 +142,7 @@ async fn launch_games_window(
 
     let url = format!("games.html?mode={}", personality_mode);
 
-    tauri::WebviewWindowBuilder::new(
+    let games_win = tauri::WebviewWindowBuilder::new(
         &app,
         "games",
         tauri::WebviewUrl::App(url.into()),
@@ -155,6 +155,18 @@ async fn launch_games_window(
     .decorations(true)
     .build()
     .map_err(|e| e.to_string())?;
+
+    // Notify main window when user closes arcade via the OS title-bar X button.
+    // (The in-game [✕ CERRAR] button uses finish_game instead.)
+    let app_handle = app.clone();
+    games_win.on_window_event(move |event| {
+        if let tauri::WindowEvent::Destroyed = event {
+            use tauri::{Emitter, Manager};
+            if let Some(main_win) = app_handle.get_webview_window("main") {
+                main_win.emit("games-window-closed", ()).ok();
+            }
+        }
+    });
 
     Ok(())
 }
