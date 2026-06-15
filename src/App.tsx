@@ -265,8 +265,13 @@ function App() {
     let ignoring = false
 
     const isDuckTransparent = (winX: number, winY: number): boolean => {
-      // While bubble, settings, or game suggestion are open, never ignore.
-      if (uiVisibleRef.current) return false
+      // Belt: uiVisibleRef is synced via useEffect (may lag 1 render).
+      // Suspenders: isThinkingRef is a separate ref updated independently.
+      // Together they guarantee click-through is disabled while the duck thinks.
+      if (uiVisibleRef.current || isThinkingRef.current) {
+        console.log('[click-through] blocked — isThinking:', isThinkingRef.current, 'uiVisible:', uiVisibleRef.current)
+        return false
+      }
 
       // Keep gear button interactive even when duck is transparent.
       const gearBtn = document.querySelector('[data-settings-btn]')

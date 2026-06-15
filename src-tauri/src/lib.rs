@@ -156,11 +156,16 @@ async fn launch_games_window(
     .build()
     .map_err(|e| e.to_string())?;
 
-    // Notify main window when user closes arcade via the OS title-bar X button.
-    // (The in-game [✕ CERRAR] button uses finish_game instead.)
+    // Notify main window when the arcade window closes — either via the OS
+    // title-bar X button (Destroyed fires on Windows, CloseRequested fires first)
+    // or programmatically from finish_game (both paths are handled gracefully).
     let app_handle = app.clone();
     games_win.on_window_event(move |event| {
-        if let tauri::WindowEvent::Destroyed = event {
+        let should_notify = matches!(
+            event,
+            tauri::WindowEvent::Destroyed | tauri::WindowEvent::CloseRequested { .. }
+        );
+        if should_notify {
             use tauri::{Emitter, Manager};
             if let Some(main_win) = app_handle.get_webview_window("main") {
                 main_win.emit("games-window-closed", ()).ok();
@@ -371,6 +376,18 @@ pub fn run() {
             let y = mon.height as i32 - win_size.height as i32 - 80;
             let _ = win.set_position(tauri::PhysicalPosition::new(x, y));
           }
+        }
+      }
+
+      // Windows: WebView2 can apply an acrylic/glass compositor effect even when
+      // transparent:true is set. clear_acrylic() forces the WebView2 background
+      // to be fully transparent so the duck floats without a grey halo.
+      #[cfg(target_os = "windows")]
+      {
+        use tauri::Manager;
+        use window_vibrancy::clear_acrylic;
+        if let Some(win) = app.get_webview_window("main") {
+          let _ = clear_acrylic(&win);
         }
       }
 
